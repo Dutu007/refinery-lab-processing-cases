@@ -404,7 +404,7 @@
         var unsafe = [
           { re: /\b(?:fetch|WebSocket|XMLHttpRequest|EventSource|sendBeacon)\b/i, label: '网络请求' },
           { re: /\b(?:localStorage|sessionStorage|indexedDB|document\.cookie)\b/i, label: '持久化/ Cookie 访问' },
-          { re: /\b(?:eval|Function|importScripts)\s*\\(/i, label: '动态代码执行' }
+          { re: /\b(?:eval|Function|importScripts)\s*\(/i, label: '动态代码执行' }
         ].filter(function (rule) { return rule.re.test(jsFile.data); });
         if (unsafe.length) {
           err('示范脚本包含不允许的能力：' + unsafe.map(function (x) { return x.label; }).join('、'),
