@@ -1,0 +1,173 @@
+{
+  "id": "refining-cdu-optimization",
+  "sceneId": "r1",
+  "title": "常减压装置操作优化",
+  "version": "1.0.0",
+  "updated": "2026-10-23",
+  "status": "ready",
+  "methods": [
+    "opt"
+  ],
+  "presentation": {
+    "short": "常减压优化",
+    "en": "DISTILLATION OPTIMIZATION",
+    "algorithm": "二次岭回归 · 约束搜索",
+    "difficulty": "中",
+    "summary": "调整炉温、回流比和压力，在闪点与能耗约束下比较轻馏分收率。",
+    "question": "收率想高一点，能耗和产品质量还能满足要求吗？",
+    "sources": [
+      [
+        "EIA · 原油炼制与分离",
+        "https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil-the-refining-process.php"
+      ],
+      [
+        "Ridge · 岭回归定义",
+        "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html"
+      ]
+    ],
+    "dataset": "教学合成数据"
+  },
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "常压蒸馏和减压蒸馏按沸点把原油分成不同馏分。调整操作参数会同时改变分离效果和能耗，因此不能只追求一个更高的收率。",
+      "judge": [
+        {
+          "label": "业务对象",
+          "value": "常减压装置",
+          "desc": "分离原油，得到不同馏分"
+        },
+        {
+          "label": "模型输入",
+          "value": "4个变量",
+          "desc": "炉温、回流比、压力、原油密度"
+        },
+        {
+          "label": "计算结果",
+          "value": "3个指标",
+          "desc": "轻馏分收率、能耗、柴油闪点"
+        },
+        {
+          "label": "演示方式",
+          "value": "拖动 / 寻优",
+          "desc": "比较工况，查看约束是否满足"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "THE PROCESS",
+          "title": "这个工艺在做什么？",
+          "html": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 310\" role=\"img\" aria-label=\"常压蒸馏塔按沸点分离原油馏分的示意图\"><title>常压蒸馏塔按沸点分离原油馏分的示意图</title><defs><linearGradient id=\"heat-column\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop stop-color=\"#ddebd8\"/><stop offset=\"1\" stop-color=\"#e9b28f\"/></linearGradient></defs><rect x=\"10\" y=\"8\" width=\"640\" height=\"294\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M235 55v195q0 18 70 0V55\" fill=\"url(#heat-column)\" stroke=\"#315d50\" stroke-width=\"1.5\"/><ellipse cx=\"270\" cy=\"55\" rx=\"35\" ry=\"11\" fill=\"#f7faef\" stroke=\"#315d50\"/><path d=\"M110 223h81v-38h44\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"4\"/><path d=\"M228 181L233 185L228 189\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><text x=\"55\" y=\"214\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >加热后的原油</text><path d=\"M243 77h54M305 77h72\" stroke=\"#315d50\" stroke-width=\"1.4\"/><path d=\"M372 73L377 77L372 81\" fill=\"none\" stroke=\"#315d50\" stroke-width=\"1.6\"/><text x=\"390\" y=\"81\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >气体 / 最轻组分</text><path d=\"M243 115h54M305 115h72\" stroke=\"#315d50\" stroke-width=\"1.4\"/><path d=\"M372 111L377 115L372 119\" fill=\"none\" stroke=\"#315d50\" stroke-width=\"1.6\"/><text x=\"390\" y=\"119\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >石脑油</text><path d=\"M243 153h54M305 153h72\" stroke=\"#315d50\" stroke-width=\"1.4\"/><path d=\"M372 149L377 153L372 157\" fill=\"none\" stroke=\"#315d50\" stroke-width=\"1.6\"/><text x=\"390\" y=\"157\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >煤油馏分</text><path d=\"M243 191h54M305 191h72\" stroke=\"#315d50\" stroke-width=\"1.4\"/><path d=\"M372 187L377 191L372 195\" fill=\"none\" stroke=\"#315d50\" stroke-width=\"1.6\"/><text x=\"390\" y=\"195\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >柴油馏分</text><path d=\"M243 229h54M305 229h72\" stroke=\"#d75736\" stroke-width=\"3\"/><path d=\"M372 225L377 229L372 233\" fill=\"none\" stroke=\"#315d50\" stroke-width=\"1.6\"/><text x=\"390\" y=\"233\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >重油 / 塔底</text><path d=\"M208 77V226\" stroke=\"#d75736\" stroke-width=\"1.4\"/><text x=\"124\" y=\"82\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >上部较冷</text><text x=\"124\" y=\"230\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >下部较热</text><text x=\"80\" y=\"278\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >按沸点分离，不是把分子切碎。减压塔进一步分离常压塔底重油。</text></svg><figcaption>概念示意，不作为装置工程图或标准操作条件。</figcaption></figure><p>原油是一组沸点不同的烃类混合物。加热后进入分馏塔，较易汽化的组分向上走，较重组分留在下部；减压蒸馏用更低的绝对压力进一步分离重馏分。</p><p>操作人员需要同时考虑收率、产品质量和能耗。更高炉温不一定带来更好的综合结果：加热耗能增加，分离出的组分也可能影响柴油闪点。</p>"
+        },
+        {
+          "no": 2,
+          "en": "THE MODEL",
+          "title": "智能方法具体算哪一步？",
+          "html": "<p>先用历史操作样本训练三个二次岭回归模型，分别学习“参数 → 收率”“参数 → 能耗”和“参数 → 闪点”。新工况输入后，模型预测三项指标。</p><p>接着在离散参数网格中搜索，剔除闪点低于55 °C或能耗超过1.85 GJ/t的候选，再比较剩余候选的目标值。阈值与权重仅为教学设置，不是产品标准或装置操作规程。</p><div class=\"equation\"><span>目标值 = 收率 − 11 × 单位能耗</span><small>把不同量纲的指标放进一个教学目标；权重改变时，推荐参数也会改变。</small></div>"
+        },
+        {
+          "no": 3,
+          "en": "THE DATA",
+          "title": "模型需要哪些数据？",
+          "html": "<div class=\"table-wrap\"><table class=\"context-table\"><thead><tr><th>数据</th><th>实际场景需要什么</th><th>本例怎样演示</th></tr></thead><tbody><tr><td>操作过程</td><td>同一时段的炉温、压力、回流和原油性质</td><td>随机种子1301生成450组工况</td></tr><tr><td>模型标签</td><td>与工况对齐的收率、能耗和化验闪点</td><td>加入独立测量噪声，模拟观测标签</td></tr><tr><td>数据划分</td><td>按批次或时间划分，避免相邻样本泄漏</td><td>360组训练，90组独立测试</td></tr></tbody></table></div>"
+        },
+        {
+          "no": 4,
+          "en": "THE LIMITS",
+          "title": "什么情况下需要重新检查？",
+          "html": "<p><b>难度：中。</b>难点是工况对齐、原油切换和约束处理。真实装置通常还要处理滞后、设备边界与多种产品质量要求。</p><p>本例用同一组合成响应生成训练和测试样本，误差只能说明模型在这组合成数据中的拟合效果。超出原油密度或操作范围时，应重新检查模型，不能直接外推。</p><div class=\"source-links\"><span>专业与算法参考</span><a href=\"https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil-the-refining-process.php\" target=\"_blank\" rel=\"noopener noreferrer\">EIA · 原油炼制与分离 ↗</a><a href=\"https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html\" target=\"_blank\" rel=\"noopener noreferrer\">Ridge · 岭回归定义 ↗</a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "从原始数据到可复核的结果",
+      "lead": [
+        "调整炉温、回流比和压力，在闪点与能耗约束下比较轻馏分收率。",
+        "点击步骤查看要做什么、输出什么，以及容易出错的地方。"
+      ],
+      "stats": [
+        [
+          "训练样本",
+          "360组"
+        ],
+        [
+          "独立测试",
+          "90组"
+        ],
+        [
+          "候选搜索",
+          "4004组"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "整理操作记录",
+          "role": "数据",
+          "do": "把同一时段的炉温、回流比、减压塔压力、原油密度与三项结果放在同一行。",
+          "effect": "得到一条工况对应一组结果的监督学习样本。",
+          "trap": "化验采样时刻与结果录入时刻不同，不能按录入时间直接拼表。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"操作记录步骤示意\"><title>操作记录步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><text x=\"47\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >时间</text><text x=\"176\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 A</text><text x=\"305\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 B</text><text x=\"434\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >标签 / 状态</text><path d=\"M38 64H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"72\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"72\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 92H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"100\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"100\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 120H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"128\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"128\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 148H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"156\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"156\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01 / 操作记录</text></svg>"
+        },
+        {
+          "name": "标准化与划分样本",
+          "role": "预处理",
+          "do": "只用360组训练样本计算输入均值和标准差，再构造二次项与交互项。",
+          "effect": "不同量纲的输入可以一起参与拟合，90组测试样本保持独立。",
+          "trap": "先用全部数据计算缩放参数，会把测试集信息泄漏进训练。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"变量对齐步骤示意\"><title>变量对齐步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 57v93h190M365 57v93h190M260 107h68\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M323 103L328 107L323 111\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><circle cx=\"58\" cy=\"137\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"386\" cy=\"133\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"64.5\" cy=\"142.3836768414311\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"392\" cy=\"136.86508198777977\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"71\" cy=\"124.58877754222866\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"398\" cy=\"122.7023825328445\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"77.5\" cy=\"126.08526051620966\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"404\" cy=\"123.54409151260752\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"84\" cy=\"134.70422421961044\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"410\" cy=\"129.92550772636366\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"90.5\" cy=\"118.10381000199567\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"416\" cy=\"116.69185222377442\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"97\" cy=\"115.37084373799608\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"422\" cy=\"114.24398957399696\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"103.5\" cy=\"126.31546620125384\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"428\" cy=\"122.4342514898641\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"110\" cy=\"112.0088701500144\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"434\" cy=\"110.98467678334454\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"116.5\" cy=\"105.04111477905491\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"440\" cy=\"105.24308927259827\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"123\" cy=\"117.21650725654865\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"446\" cy=\"114.39061675509339\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"129.5\" cy=\"106.12033821638637\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"452\" cy=\"105.43804083496717\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"136\" cy=\"95.24979474194039\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"458\" cy=\"96.66095146595363\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"142.5\" cy=\"107.46302605431642\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"464\" cy=\"105.83790915335722\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"149\" cy=\"100.23815209477084\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"470\" cy=\"99.89634051815509\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"155.5\" cy=\"86.10771538316425\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"476\" cy=\"88.58377863134997\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"162\" cy=\"97.16284013117522\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"482\" cy=\"96.85998676869184\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"168.5\" cy=\"94.16174417508022\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"488\" cy=\"94.20357880284017\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"175\" cy=\"77.67399031901195\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"494\" cy=\"81.05754802589819\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"181.5\" cy=\"86.46731720838449\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"500\" cy=\"87.5745800509657\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"188\" cy=\"87.70601844431414\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"506\" cy=\"88.21579212335544\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"194.5\" cy=\"69.9513060687593\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"512\" cy=\"74.08434916459056\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"201\" cy=\"75.55931732594873\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"518\" cy=\"78.1239134757379\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"207.5\" cy=\"80.7160951288393\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"524\" cy=\"81.81251843354167\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><text x=\"47\" y=\"179\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >不同量纲 / 时间基准</text><text x=\"367\" y=\"179\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >统一缩放 / 样本对齐</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02 / 变量对齐</text></svg>"
+        },
+        {
+          "name": "拟合三个响应模型",
+          "role": "学习",
+          "do": "分别对收率、能耗和闪点求解带正则项的最小二乘问题。",
+          "effect": "得到可在浏览器中快速计算的三个代理模型。",
+          "trap": "模型学到的是样本覆盖范围内的统计关系，不是完整工艺机理。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"学习响应步骤示意\"><title>学习响应步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><rect x=\"47\" y=\"65\" width=\"125\" height=\"75\" rx=\"3\" fill=\"#dce6d3\"/><text x=\"73\" y=\"107\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >训练样本</text><path d=\"M172 103h73\" stroke=\"#d75736\"/><path d=\"M240 99L245 103L240 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"250\" y=\"56\" width=\"130\" height=\"94\" rx=\"3\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"280\" y=\"98\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >拟合模型</text><text x=\"272\" y=\"122\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >从样本学习参数</text><path d=\"M380 103h60\" stroke=\"#d75736\"/><path d=\"M435 99L440 103L435 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><text x=\"456\" y=\"100\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保存参数</text><text x=\"456\" y=\"120\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留独立测试集</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03 / 学习响应</text></svg>"
+        },
+        {
+          "name": "过滤约束并寻找参数",
+          "role": "优化",
+          "do": "固定当前原油密度，在炉温26档、回流比14档、压力11档组成的4004组网格中搜索。",
+          "effect": "只在满足闪点和能耗约束的候选中比较教学目标值。",
+          "trap": "直接取收率最高点，可能得到质量不合格或能耗过高的工况。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"约束寻优步骤示意\"><title>约束寻优步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 155H560M45 155V47\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M50 140C120 135 151 126 202 114S280 72 340 78S455 121 552 51\" stroke=\"#315d50\" stroke-width=\"2.5\" fill=\"none\"/><path d=\"M45 92H560\" stroke=\"#d75736\" stroke-width=\"1.4\" stroke-dasharray=\"6 5\"/><circle cx=\"317\" cy=\"79\" r=\"6\" fill=\"#d75736\" stroke=\"white\" stroke-width=\"2\"/><text x=\"399\" y=\"85\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >质量 / 能耗约束</text><text x=\"47\" y=\"181\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >计算结果需要结合边界条件解释。</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04 / 约束寻优</text></svg>"
+        },
+        {
+          "name": "比较预测与独立基准",
+          "role": "评价",
+          "do": "在90组测试数据上计算三个模型的RMSE，并比较推荐工况与初始工况。",
+          "effect": "把改进幅度、约束是否满足与模型误差一起展示。",
+          "trap": "测试误差小，也不能证明在其他原油和其他装置上有效。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"比较验收步骤示意\"><title>比较验收步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M54 158V48M54 158H280M54 158L264 50\" fill=\"none\" stroke=\"#d7dfd1\" stroke-dasharray=\"4 3\"/><circle cx=\"67\" cy=\"148\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"75\" cy=\"152.99297426825683\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"83\" cy=\"132.23197504692072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"91\" cy=\"132.90584501801072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"99\" cy=\"141.49358246623382\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"107\" cy=\"122.05978889110631\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"115\" cy=\"118.03427081999565\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"123\" cy=\"129.20607355694872\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"131\" cy=\"112.32096683334935\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"139\" cy=\"103.59012753228323\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"147\" cy=\"116.12945250727628\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"155\" cy=\"102.81148690709597\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"163\" cy=\"89.74421637993377\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"171\" cy=\"102.32558450479603\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"179\" cy=\"93.3090578830787\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"187\" cy=\"76.61968375907138\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"195\" cy=\"87.91426681241691\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"203\" cy=\"83.59082686120026\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"211\" cy=\"64.28221146556885\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"219\" cy=\"73.06368578709386\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"227\" cy=\"73.45113160479349\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"235\" cy=\"52.73478452084367\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><text x=\"347\" y=\"83\" fill=\"#315d50\" font-size=\"15\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >与独立基准比较</text><text x=\"347\" y=\"111\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >记录误差、误报和失败条件</text><text x=\"347\" y=\"139\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留人工复核入口</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05 / 比较验收</text></svg>"
+        }
+      ],
+      "metrics": {
+        "title": "如何判断这次计算有没有用？",
+        "html": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 120\" role=\"img\" aria-label=\"案例完整计算流程\"><title>案例完整计算流程</title><rect x=\"8\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"19\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01</text><text x=\"19\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >操作记录</text><path d=\"M122 61h11\" stroke=\"#d75736\"/><path d=\"M128 57L133 61L128 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"136\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"147\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02</text><text x=\"147\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >标准化与划分样</text><path d=\"M250 61h11\" stroke=\"#d75736\"/><path d=\"M256 57L261 61L256 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"264\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"275\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03</text><text x=\"275\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >拟合三个响应模</text><path d=\"M378 61h11\" stroke=\"#d75736\"/><path d=\"M384 57L389 61L384 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"392\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"403\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04</text><text x=\"403\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >过滤约束</text><path d=\"M506 61h11\" stroke=\"#d75736\"/><path d=\"M512 57L517 61L512 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"520\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"531\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05</text><text x=\"531\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >比较预测与独立</text></svg><p>评价包括三项测试RMSE、目标值变化和两项约束是否满足。图中所有数值都由本次训练和预测计算，不预设“提升百分比”。</p>"
+      },
+      "fails": [
+        {
+          "name": "工况未对齐",
+          "why": "把不同时间的操作量与化验结果拼在一起，模型会学习到错误关系。"
+        },
+        {
+          "name": "只看收率",
+          "why": "忽略闪点和能耗约束，可能选择不允许执行的参数。"
+        },
+        {
+          "name": "超出样本边界",
+          "why": "原油性质或装置状态变化后，原有模型可能不再适用。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "page",
+      "html": "demo/index.html",
+      "label": "交互演示",
+      "intro": "调整炉温、回流比和压力，在闪点与能耗约束下比较轻馏分收率。",
+      "height": 780
+    }
+  }
+}

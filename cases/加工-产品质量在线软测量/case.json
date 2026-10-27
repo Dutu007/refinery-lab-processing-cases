@@ -1,0 +1,173 @@
+{
+  "id": "refining-quality-softsensor",
+  "sceneId": "r5",
+  "title": "产品质量在线软测量",
+  "version": "1.0.0",
+  "updated": "2026-10-23",
+  "status": "ready",
+  "methods": [
+    "ts"
+  ],
+  "presentation": {
+    "short": "质量软测量",
+    "en": "ONLINE QUALITY SOFT SENSOR",
+    "algorithm": "岭回归 · 残差区间",
+    "difficulty": "中",
+    "summary": "用连续过程变量估计重整汽油辛烷值，补上两次化验之间的时间空档。",
+    "question": "化验结果滞后时，现在的产品质量该怎么看？",
+    "sources": [
+      [
+        "EIA · 催化重整与汽油组分",
+        "https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil-the-refining-process.php"
+      ],
+      [
+        "Ridge · 带正则的线性回归",
+        "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html"
+      ]
+    ],
+    "dataset": "教学合成数据"
+  },
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "温度、压力和流量可以连续读取，但部分产品质量需要取样化验。软测量用容易获取的过程变量估计质量，并由化验结果持续校准。",
+      "judge": [
+        {
+          "label": "业务对象",
+          "value": "重整汽油",
+          "desc": "研究法辛烷值RON"
+        },
+        {
+          "label": "连续输入",
+          "value": "4类过程量",
+          "desc": "温度、压力、氢油比、原料芳烃"
+        },
+        {
+          "label": "采样间隔",
+          "value": "8小时",
+          "desc": "页面可调整结果返回延迟"
+        },
+        {
+          "label": "预测输出",
+          "value": "数值 + 区间",
+          "desc": "同时查看误差和区间覆盖"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "THE PROCESS",
+          "title": "这个工艺在做什么？",
+          "html": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 310\" role=\"img\" aria-label=\"连续软测量与间隔取样延迟化验的时间关系图\"><title>连续软测量与间隔取样延迟化验的时间关系图</title><rect x=\"10\" y=\"8\" width=\"640\" height=\"294\" rx=\"4\" fill=\"#f3f5ed\"/><text x=\"42\" y=\"43\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >连续过程测量</text><text x=\"42\" y=\"166\" fill=\"#d75736\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >间隔化验取样</text><path d=\"M170 106H611M170 220H611\" stroke=\"#d7dfd1\"/><path d=\"M170 99C210 106 216 58 252 69S310 125 352 93S411 63 451 85S524 123 610 63\" fill=\"none\" stroke=\"#315d50\" stroke-width=\"2.5\"/><circle cx=\"182\" cy=\"220\" r=\"5\" fill=\"#d75736\"/><path d=\"M182 215V190h53v25\" stroke=\"#d75736\" fill=\"none\" stroke-dasharray=\"3 3\"/><circle cx=\"235\" cy=\"220\" r=\"4\" fill=\"#fff\" stroke=\"#d75736\"/><text x=\"182\" y=\"248\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" text-anchor=\"middle\">0h</text><circle cx=\"299\" cy=\"220\" r=\"5\" fill=\"#d75736\"/><path d=\"M299 215V190h53v25\" stroke=\"#d75736\" fill=\"none\" stroke-dasharray=\"3 3\"/><circle cx=\"352\" cy=\"220\" r=\"4\" fill=\"#fff\" stroke=\"#d75736\"/><text x=\"299\" y=\"248\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" text-anchor=\"middle\">8h</text><circle cx=\"416\" cy=\"220\" r=\"5\" fill=\"#d75736\"/><path d=\"M416 215V190h53v25\" stroke=\"#d75736\" fill=\"none\" stroke-dasharray=\"3 3\"/><circle cx=\"469\" cy=\"220\" r=\"4\" fill=\"#fff\" stroke=\"#d75736\"/><text x=\"416\" y=\"248\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" text-anchor=\"middle\">16h</text><circle cx=\"533\" cy=\"220\" r=\"5\" fill=\"#d75736\"/><path d=\"M533 215V190h53v25\" stroke=\"#d75736\" fill=\"none\" stroke-dasharray=\"3 3\"/><circle cx=\"586\" cy=\"220\" r=\"4\" fill=\"#fff\" stroke=\"#d75736\"/><text x=\"533\" y=\"248\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" text-anchor=\"middle\">24h</text><text x=\"251\" y=\"182\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >采样 → 等待 → 结果返回</text><text x=\"172\" y=\"134\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >模型每个时刻都有估计，还需要化验校准。</text><text x=\"42\" y=\"283\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >软测量 = 用容易在线测到的变量，估计难以连续测到的质量指标。</text></svg><figcaption>概念示意，不作为装置工程图或标准操作条件。</figcaption></figure><p>催化重整改变石脑油中的分子结构，得到高辛烷值汽油组分。质量指标的化验结果需要时间，最近收到的结果往往描述几小时前取出的样本。</p><p>直接把最近化验值当作当前质量，会忽略这段时间的工况变化。软测量的作用是在间隔化验之间提供连续估计，而不是取消化验。</p>"
+        },
+        {
+          "no": 2,
+          "en": "THE MODEL",
+          "title": "智能方法具体算哪一步？",
+          "html": "<p>用过程量与按取样时刻对齐的质量标签训练岭回归。模型在每个新时刻读取过程量，输出RON估计，并展示四个输入相对训练均值对模型结果的贡献。</p><p>另用独立校准集的绝对残差分位数生成区间。页面比较模型、已返回化验保持值与合成真实值；噪声增大时可以看到区间覆盖发生变化。</p><div class=\"equation\"><span>估计质量 = 截距 + Σ（权重 × 标准化过程变量）</span><small>残差区间来自独立校准数据；它不是对每个未来工况的固定覆盖保证。</small></div>"
+        },
+        {
+          "no": 3,
+          "en": "THE DATA",
+          "title": "模型需要哪些数据？",
+          "html": "<div class=\"table-wrap\"><table class=\"context-table\"><thead><tr><th>数据</th><th>实际场景需要什么</th><th>本例怎样演示</th></tr></thead><tbody><tr><td>过程变量</td><td>反应温度、压力、氢油比、原料组分</td><td>四维历史样本与96小时连续演练</td></tr><tr><td>化验标签</td><td>按取样时间对齐，区分结果返回时间</td><td>每8小时取样，延迟0—12小时可调</td></tr><tr><td>验证划分</td><td>训练、区间校准和测试数据互不混用</td><td>360组训练、80组校准、80组测试</td></tr></tbody></table></div>"
+        },
+        {
+          "no": 4,
+          "en": "THE LIMITS",
+          "title": "什么情况下需要重新检查？",
+          "html": "<p><b>难度：中。</b>困难来自标签稀疏、采样滞后和工况变化。真实装置还需要停留时间、仪表漂移和模型更新机制。</p><p>变量贡献仅解释回归模型的计算，不是因果证明。传感器噪声或工况超出训练范围时，区间可能失准；页面会用合成真实值计算实际覆盖，而不固定展示95%。</p><div class=\"source-links\"><span>专业与算法参考</span><a href=\"https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil-the-refining-process.php\" target=\"_blank\" rel=\"noopener noreferrer\">EIA · 催化重整与汽油组分 ↗</a><a href=\"https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html\" target=\"_blank\" rel=\"noopener noreferrer\">Ridge · 带正则的线性回归 ↗</a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "从原始数据到可复核的结果",
+      "lead": [
+        "用连续过程变量估计重整汽油辛烷值，补上两次化验之间的时间空档。",
+        "点击步骤查看要做什么、输出什么，以及容易出错的地方。"
+      ],
+      "stats": [
+        [
+          "训练样本",
+          "360组"
+        ],
+        [
+          "校准 / 测试",
+          "80 / 80"
+        ],
+        [
+          "运行演练",
+          "96小时"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "收集过程量和化验值",
+          "role": "数据",
+          "do": "记录四类过程变量，并为每次化验保留取样时间与结果返回时间。",
+          "effect": "分清“这个值描述何时的产品”与“何时才能看到这个值”。",
+          "trap": "按结果返回时间拼接过程量，会把滞后标签配给错误工况。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"过程与化验步骤示意\"><title>过程与化验步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><text x=\"47\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >时间</text><text x=\"176\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 A</text><text x=\"305\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 B</text><text x=\"434\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >标签 / 状态</text><path d=\"M38 64H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"72\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"72\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 92H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"100\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"100\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 120H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"128\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"128\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 148H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"156\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"156\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01 / 过程与化验</text></svg>"
+        },
+        {
+          "name": "对齐标签并拆分数据",
+          "role": "预处理",
+          "do": "按取样时刻匹配变量，训练、校准、测试样本分别保留。",
+          "effect": "模型拟合、区间估计与最终评价彼此独立。",
+          "trap": "真实生产还可能需要考虑装置停留时间，不能简单一刀切对齐。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"按取样对齐步骤示意\"><title>按取样对齐步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 57v93h190M365 57v93h190M260 107h68\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M323 103L328 107L323 111\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><circle cx=\"58\" cy=\"137\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"386\" cy=\"133\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"64.5\" cy=\"142.3836768414311\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"392\" cy=\"136.86508198777977\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"71\" cy=\"124.58877754222866\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"398\" cy=\"122.7023825328445\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"77.5\" cy=\"126.08526051620966\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"404\" cy=\"123.54409151260752\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"84\" cy=\"134.70422421961044\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"410\" cy=\"129.92550772636366\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"90.5\" cy=\"118.10381000199567\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"416\" cy=\"116.69185222377442\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"97\" cy=\"115.37084373799608\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"422\" cy=\"114.24398957399696\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"103.5\" cy=\"126.31546620125384\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"428\" cy=\"122.4342514898641\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"110\" cy=\"112.0088701500144\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"434\" cy=\"110.98467678334454\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"116.5\" cy=\"105.04111477905491\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"440\" cy=\"105.24308927259827\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"123\" cy=\"117.21650725654865\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"446\" cy=\"114.39061675509339\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"129.5\" cy=\"106.12033821638637\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"452\" cy=\"105.43804083496717\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"136\" cy=\"95.24979474194039\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"458\" cy=\"96.66095146595363\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"142.5\" cy=\"107.46302605431642\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"464\" cy=\"105.83790915335722\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"149\" cy=\"100.23815209477084\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"470\" cy=\"99.89634051815509\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"155.5\" cy=\"86.10771538316425\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"476\" cy=\"88.58377863134997\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"162\" cy=\"97.16284013117522\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"482\" cy=\"96.85998676869184\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"168.5\" cy=\"94.16174417508022\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"488\" cy=\"94.20357880284017\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"175\" cy=\"77.67399031901195\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"494\" cy=\"81.05754802589819\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"181.5\" cy=\"86.46731720838449\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"500\" cy=\"87.5745800509657\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"188\" cy=\"87.70601844431414\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"506\" cy=\"88.21579212335544\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"194.5\" cy=\"69.9513060687593\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"512\" cy=\"74.08434916459056\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"201\" cy=\"75.55931732594873\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"518\" cy=\"78.1239134757379\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"207.5\" cy=\"80.7160951288393\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"524\" cy=\"81.81251843354167\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><text x=\"47\" y=\"179\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >不同量纲 / 时间基准</text><text x=\"367\" y=\"179\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >统一缩放 / 样本对齐</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02 / 按取样对齐</text></svg>"
+        },
+        {
+          "name": "训练岭回归模型",
+          "role": "学习",
+          "do": "用360组样本拟合标准化过程变量到RON的回归，正则项抑制系数不稳定。",
+          "effect": "得到每个新时刻都能计算的质量估计。",
+          "trap": "输入变量高度相关时，单个系数不适合做因果解释。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"拟合回归步骤示意\"><title>拟合回归步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><rect x=\"47\" y=\"65\" width=\"125\" height=\"75\" rx=\"3\" fill=\"#dce6d3\"/><text x=\"73\" y=\"107\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >训练样本</text><path d=\"M172 103h73\" stroke=\"#d75736\"/><path d=\"M240 99L245 103L240 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"250\" y=\"56\" width=\"130\" height=\"94\" rx=\"3\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"280\" y=\"98\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >拟合模型</text><text x=\"272\" y=\"122\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >从样本学习参数</text><path d=\"M380 103h60\" stroke=\"#d75736\"/><path d=\"M435 99L440 103L435 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><text x=\"456\" y=\"100\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保存参数</text><text x=\"456\" y=\"120\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留独立测试集</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03 / 拟合回归</text></svg>"
+        },
+        {
+          "name": "逐时估计并计算区间",
+          "role": "推理",
+          "do": "用80组独立校准样本的绝对残差95%分位数确定区间半宽，再逐时计算预测。",
+          "effect": "估计值与不确定程度一起显示，化验返回后再对照。",
+          "trap": "工况漂移时固定残差区间可能失准，需要监控和更新。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"在线估计步骤示意\"><title>在线估计步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 155H560M45 155V47\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M50 140C120 135 151 126 202 114S280 72 340 78S455 121 552 51\" stroke=\"#315d50\" stroke-width=\"2.5\" fill=\"none\"/><path d=\"M45 92H560\" stroke=\"#d75736\" stroke-width=\"1.4\" stroke-dasharray=\"6 5\"/><circle cx=\"317\" cy=\"79\" r=\"6\" fill=\"#d75736\" stroke=\"white\" stroke-width=\"2\"/><text x=\"399\" y=\"85\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >新输入 → 计算结果</text><text x=\"47\" y=\"181\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >计算结果需要结合边界条件解释。</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04 / 在线估计</text></svg>"
+        },
+        {
+          "name": "与滞后化验保持值比较",
+          "role": "评价",
+          "do": "只在两种方法都有结果的相同时刻比较MAE，并另报独立测试误差与覆盖率。",
+          "effect": "看到连续估计在化验空档中的作用与局限。",
+          "trap": "不能给模型更多可见数据，却只让基准使用过期数据后宣称普遍优越。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"对照误差步骤示意\"><title>对照误差步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M54 158V48M54 158H280M54 158L264 50\" fill=\"none\" stroke=\"#d7dfd1\" stroke-dasharray=\"4 3\"/><circle cx=\"67\" cy=\"148\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"75\" cy=\"152.99297426825683\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"83\" cy=\"132.23197504692072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"91\" cy=\"132.90584501801072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"99\" cy=\"141.49358246623382\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"107\" cy=\"122.05978889110631\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"115\" cy=\"118.03427081999565\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"123\" cy=\"129.20607355694872\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"131\" cy=\"112.32096683334935\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"139\" cy=\"103.59012753228323\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"147\" cy=\"116.12945250727628\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"155\" cy=\"102.81148690709597\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"163\" cy=\"89.74421637993377\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"171\" cy=\"102.32558450479603\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"179\" cy=\"93.3090578830787\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"187\" cy=\"76.61968375907138\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"195\" cy=\"87.91426681241691\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"203\" cy=\"83.59082686120026\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"211\" cy=\"64.28221146556885\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"219\" cy=\"73.06368578709386\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"227\" cy=\"73.45113160479349\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"235\" cy=\"52.73478452084367\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><text x=\"347\" y=\"83\" fill=\"#315d50\" font-size=\"15\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >与独立基准比较</text><text x=\"347\" y=\"111\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >记录误差、误报和失败条件</text><text x=\"347\" y=\"139\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留人工复核入口</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05 / 对照误差</text></svg>"
+        }
+      ],
+      "metrics": {
+        "title": "如何判断这次计算有没有用？",
+        "html": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 120\" role=\"img\" aria-label=\"案例完整计算流程\"><title>案例完整计算流程</title><rect x=\"8\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"19\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01</text><text x=\"19\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >过程量和化验值</text><path d=\"M122 61h11\" stroke=\"#d75736\"/><path d=\"M128 57L133 61L128 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"136\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"147\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02</text><text x=\"147\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >对齐标签</text><path d=\"M250 61h11\" stroke=\"#d75736\"/><path d=\"M256 57L261 61L256 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"264\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"275\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03</text><text x=\"275\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >训练岭回归模型</text><path d=\"M378 61h11\" stroke=\"#d75736\"/><path d=\"M384 57L389 61L384 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"392\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"403\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04</text><text x=\"403\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >逐时估计</text><path d=\"M506 61h11\" stroke=\"#d75736\"/><path d=\"M512 57L517 61L512 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"520\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"531\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05</text><text x=\"531\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >与滞后化验保持</text></svg><p>报告独立测试MAE、独立测试区间覆盖，并在相同可比较时刻计算模型与化验保持值的MAE。页面展示实际计算结果，不预设优胜方法。</p>"
+      },
+      "fails": [
+        {
+          "name": "采样时刻错配",
+          "why": "把化验返回时间当取样时间，会系统性训练错位。"
+        },
+        {
+          "name": "输入噪声增大",
+          "why": "训练时很干净的过程量，在现场可能受到仪表噪声影响。"
+        },
+        {
+          "name": "区间被误读",
+          "why": "校准集95%残差分位数不保证所有未来工况都覆盖95%。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "page",
+      "html": "demo/index.html",
+      "label": "交互演示",
+      "intro": "用连续过程变量估计重整汽油辛烷值，补上两次化验之间的时间空档。",
+      "height": 780
+    }
+  }
+}

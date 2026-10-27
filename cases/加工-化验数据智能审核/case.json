@@ -1,0 +1,173 @@
+{
+  "id": "refining-lab-review",
+  "sceneId": "r4",
+  "title": "化验数据智能审核",
+  "version": "1.0.0",
+  "updated": "2026-10-23",
+  "status": "ready",
+  "methods": [
+    "opt"
+  ],
+  "presentation": {
+    "short": "化验数据审核",
+    "en": "LABORATORY DATA REVIEW",
+    "algorithm": "孤立森林 · 范围规则",
+    "difficulty": "低",
+    "summary": "把范围检查与异常检测结合，筛出需要人工复核的化验记录。",
+    "question": "每个数字都在允许范围，组合起来是否仍然可疑？",
+    "sources": [
+      [
+        "IsolationForest · 算法与异常分数",
+        "https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html"
+      ],
+      [
+        "EIA · 炼化产品与工艺",
+        "https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil-the-refining-process.php"
+      ]
+    ],
+    "dataset": "教学合成数据"
+  },
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "化验数据可能因取样、仪器、录入或工况变化出现异常。范围规则能发现单项超限，异常检测可以补充寻找少见的指标组合。",
+      "judge": [
+        {
+          "label": "业务对象",
+          "value": "化验记录",
+          "desc": "密度、闪点与硫含量"
+        },
+        {
+          "label": "传统做法",
+          "value": "范围检查",
+          "desc": "每个指标分别比较上下限"
+        },
+        {
+          "label": "模型补充",
+          "value": "少见组合",
+          "desc": "从正常样本学习分布"
+        },
+        {
+          "label": "处理方式",
+          "value": "人工复核",
+          "desc": "保留原值，不自动改数"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "THE PROCESS",
+          "title": "这个工艺在做什么？",
+          "html": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 310\" role=\"img\" aria-label=\"化验指标范围检查与多变量组合异常的区别\"><title>化验指标范围检查与多变量组合异常的区别</title><rect x=\"10\" y=\"8\" width=\"640\" height=\"294\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M70 40V246H391\" stroke=\"#315d50\" fill=\"none\"/><rect x=\"96\" y=\"59\" width=\"259\" height=\"159\" fill=\"none\" stroke=\"#315d50\" stroke-dasharray=\"6 5\" opacity=\".6\"/><ellipse cx=\"222\" cy=\"145\" rx=\"91\" ry=\"25\" transform=\"rotate(-28 222 145)\" fill=\"#cbdcc6\" opacity=\".8\"/><circle cx=\"130\" cy=\"190\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"135\" cy=\"194.17277738259938\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"140\" cy=\"174.40381159985816\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"145\" cy=\"188.95777944551492\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"150\" cy=\"178.24806022848927\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"155\" cy=\"169.43348257803987\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"160\" cy=\"183.16571303301382\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"165\" cy=\"162.679650144603\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"170\" cy=\"168.70219684492736\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"175\" cy=\"170.94023812783337\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"180\" cy=\"152.09514479102845\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"185\" cy=\"167.2593832442885\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"190\" cy=\"154.75090634780466\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"195\" cy=\"147.9047609026278\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"200\" cy=\"160.61380046518747\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"205\" cy=\"139.62615399848113\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"210\" cy=\"147.39096286969937\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"215\" cy=\"147.63287699856676\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"220\" cy=\"129.9071735998545\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"225\" cy=\"145.4627794248717\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"230\" cy=\"131.27384749856918\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"235\" cy=\"126.44543856582817\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"240\" cy=\"137.94230182732716\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"245\" cy=\"116.67469735662101\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"250\" cy=\"126.05303091542574\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"255\" cy=\"124.26175064425307\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"260\" cy=\"107.8373143491899\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"265\" cy=\"123.56061530283141\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"270\" cy=\"107.83000818188047\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"275\" cy=\"105.04405293954805\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"280\" cy=\"115.15452546620804\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"285\" cy=\"93.83199999418292\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"290\" cy=\"104.675459151452\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"295\" cy=\"100.83869272552464\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"300\" cy=\"85.88154410878336\" r=\"2.8\" fill=\"#315d50\" opacity=\".7\"/><circle cx=\"310\" cy=\"195\" r=\"6\" fill=\"#d75736\"/><path d=\"M318 195h102\" stroke=\"#d75736\" stroke-dasharray=\"3 3\"/><text x=\"426\" y=\"190\" fill=\"#d75736\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >范围内的少见组合</text><text x=\"426\" y=\"210\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >规则可能放过，模型标记</text><circle cx=\"382\" cy=\"88\" r=\"6\" fill=\"#d75736\"/><path d=\"M390 88h30\" stroke=\"#d75736\"/><text x=\"426\" y=\"86\" fill=\"#d75736\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >单项超出范围</text><text x=\"426\" y=\"106\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >范围规则直接命中</text><text x=\"76\" y=\"31\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >闪点</text><text x=\"350\" y=\"268\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >密度</text><text x=\"86\" y=\"287\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >虚线框：单项允许范围；斜向点群：正常样本之间的关系。</text></svg><figcaption>概念示意，不作为装置工程图或标准操作条件。</figcaption></figure><p>一条化验单包括多个指标。录入错误可能直接超范围，但有些少见组合的每一项都没有超限，只用规则会漏掉。</p><p>反过来，真实工况变化也可能产生少见但正确的记录。因此自动审核的合理输出是“待复核”，而不是自动认定错误并修改数据。</p>"
+        },
+        {
+          "no": 2,
+          "en": "THE MODEL",
+          "title": "智能方法具体算哪一步？",
+          "html": "<p>孤立森林反复随机选取特征和切分值。容易被很少几次切分就单独隔离的样本，通常更少见，异常分数更高。</p><p>本例用90棵随机树学习正常样本，再把模型分数与范围规则合并。表格显示每条记录的分数、规则是否命中和待复核状态，也可导入自己的CSV体验同一流程。</p><div class=\"equation\"><span>待复核 = 模型分数超阈值 或 范围规则命中</span><small>两条路径保留各自依据；可以停用规则或调整模型阈值。</small></div>"
+        },
+        {
+          "no": 3,
+          "en": "THE DATA",
+          "title": "模型需要哪些数据？",
+          "html": "<div class=\"table-wrap\"><table class=\"context-table\"><thead><tr><th>数据</th><th>实际场景需要什么</th><th>本例怎样演示</th></tr></thead><tbody><tr><td>正常历史记录</td><td>经过确认的密度、闪点、硫等测定值</td><td>260组正常训练样本，90棵随机树</td></tr><tr><td>审核批次</td><td>保留原始值与取样标识</td><td>30条记录，可调注入异常数量</td></tr><tr><td>异常标签</td><td>历史复核结论，用于评价而非必须训练</td><td>合成异常有已知标签；导入数据不伪造标签</td></tr></tbody></table></div>"
+        },
+        {
+          "no": 4,
+          "en": "THE LIMITS",
+          "title": "什么情况下需要重新检查？",
+          "html": "<p><b>难度：低。</b>能快速做出原型，但真实部署需要仪器状态、样本类型、产品牌号与审核记录等上下文。</p><p>页面中的范围仅为教学规则，不是产品标准。孤立森林只说明样本少见；要通过重测、仪器记录或原始报告判断异常原因。导入CSV后不展示无法计算的检出率。</p><div class=\"source-links\"><span>专业与算法参考</span><a href=\"https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html\" target=\"_blank\" rel=\"noopener noreferrer\">IsolationForest · 算法与异常分数 ↗</a><a href=\"https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil-the-refining-process.php\" target=\"_blank\" rel=\"noopener noreferrer\">EIA · 炼化产品与工艺 ↗</a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "从原始数据到可复核的结果",
+      "lead": [
+        "把范围检查与异常检测结合，筛出需要人工复核的化验记录。",
+        "点击步骤查看要做什么、输出什么，以及容易出错的地方。"
+      ],
+      "stats": [
+        [
+          "正常训练",
+          "260组"
+        ],
+        [
+          "随机树",
+          "90棵"
+        ],
+        [
+          "待审批次",
+          "30条"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "读取化验单原始字段",
+          "role": "数据",
+          "do": "保留样本编号、密度、闪点、硫含量和原始测量值。",
+          "effect": "每条审核结果都能回到原始样本。",
+          "trap": "同名指标可能有不同单位，必须先确认单位再比较。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"化验记录步骤示意\"><title>化验记录步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><text x=\"47\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >时间</text><text x=\"176\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 A</text><text x=\"305\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 B</text><text x=\"434\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >标签 / 状态</text><path d=\"M38 64H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"72\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"72\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 92H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"100\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"100\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 120H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"128\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"128\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 148H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"156\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"156\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01 / 化验记录</text></svg>"
+        },
+        {
+          "name": "检查字段与数值范围",
+          "role": "规则",
+          "do": "验证CSV字段完整、数值可读，再检查教学范围规则。",
+          "effect": "先发现缺字段、明显录入错误与单项超限。",
+          "trap": "字段检查不等于产品合格判定；本例范围并非产品标准。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"字段核对步骤示意\"><title>字段核对步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 57v93h190M365 57v93h190M260 107h68\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M323 103L328 107L323 111\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><circle cx=\"58\" cy=\"137\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"386\" cy=\"133\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"64.5\" cy=\"142.3836768414311\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"392\" cy=\"136.86508198777977\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"71\" cy=\"124.58877754222866\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"398\" cy=\"122.7023825328445\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"77.5\" cy=\"126.08526051620966\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"404\" cy=\"123.54409151260752\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"84\" cy=\"134.70422421961044\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"410\" cy=\"129.92550772636366\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"90.5\" cy=\"118.10381000199567\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"416\" cy=\"116.69185222377442\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"97\" cy=\"115.37084373799608\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"422\" cy=\"114.24398957399696\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"103.5\" cy=\"126.31546620125384\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"428\" cy=\"122.4342514898641\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"110\" cy=\"112.0088701500144\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"434\" cy=\"110.98467678334454\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"116.5\" cy=\"105.04111477905491\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"440\" cy=\"105.24308927259827\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"123\" cy=\"117.21650725654865\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"446\" cy=\"114.39061675509339\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"129.5\" cy=\"106.12033821638637\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"452\" cy=\"105.43804083496717\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"136\" cy=\"95.24979474194039\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"458\" cy=\"96.66095146595363\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"142.5\" cy=\"107.46302605431642\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"464\" cy=\"105.83790915335722\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"149\" cy=\"100.23815209477084\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"470\" cy=\"99.89634051815509\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"155.5\" cy=\"86.10771538316425\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"476\" cy=\"88.58377863134997\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"162\" cy=\"97.16284013117522\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"482\" cy=\"96.85998676869184\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"168.5\" cy=\"94.16174417508022\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"488\" cy=\"94.20357880284017\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"175\" cy=\"77.67399031901195\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"494\" cy=\"81.05754802589819\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"181.5\" cy=\"86.46731720838449\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"500\" cy=\"87.5745800509657\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"188\" cy=\"87.70601844431414\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"506\" cy=\"88.21579212335544\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"194.5\" cy=\"69.9513060687593\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"512\" cy=\"74.08434916459056\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"201\" cy=\"75.55931732594873\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"518\" cy=\"78.1239134757379\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"207.5\" cy=\"80.7160951288393\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"524\" cy=\"81.81251843354167\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><text x=\"47\" y=\"179\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >不同量纲 / 时间基准</text><text x=\"367\" y=\"179\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >统一缩放 / 样本对齐</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02 / 字段核对</text></svg>"
+        },
+        {
+          "name": "训练孤立森林",
+          "role": "学习",
+          "do": "每棵树无放回抽取128个正常样本，随机选特征与切点，直到样本隔离或达到深度上限。",
+          "effect": "用平均隔离路径构造0—1范围的异常分数。",
+          "trap": "训练数据若包含大量未处理异常，模型学到的正常分布会偏移。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"训练随机树步骤示意\"><title>训练随机树步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><rect x=\"47\" y=\"65\" width=\"125\" height=\"75\" rx=\"3\" fill=\"#dce6d3\"/><text x=\"73\" y=\"107\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >训练样本</text><path d=\"M172 103h73\" stroke=\"#d75736\"/><path d=\"M240 99L245 103L240 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"250\" y=\"56\" width=\"130\" height=\"94\" rx=\"3\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"280\" y=\"98\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >拟合模型</text><text x=\"272\" y=\"122\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >从样本学习参数</text><path d=\"M380 103h60\" stroke=\"#d75736\"/><path d=\"M435 99L440 103L435 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><text x=\"456\" y=\"100\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保存参数</text><text x=\"456\" y=\"120\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留独立测试集</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03 / 训练随机树</text></svg>"
+        },
+        {
+          "name": "合并模型与规则结果",
+          "role": "审核",
+          "do": "逐条计算异常分数，将超阈记录与规则命中的记录合并为待复核。",
+          "effect": "保留两种审核依据，查看模型是否补上规则未发现的组合异常。",
+          "trap": "标记数量增加不必然意味着检出更好，需要看误报和已知标签。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"联合审核步骤示意\"><title>联合审核步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 155H560M45 155V47\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M50 140C120 135 151 126 202 114S280 72 340 78S455 121 552 51\" stroke=\"#315d50\" stroke-width=\"2.5\" fill=\"none\"/><path d=\"M45 92H560\" stroke=\"#d75736\" stroke-width=\"1.4\" stroke-dasharray=\"6 5\"/><circle cx=\"317\" cy=\"79\" r=\"6\" fill=\"#d75736\" stroke=\"white\" stroke-width=\"2\"/><text x=\"399\" y=\"85\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >审核阈值</text><text x=\"47\" y=\"181\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >计算结果需要结合边界条件解释。</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04 / 联合审核</text></svg>"
+        },
+        {
+          "name": "人工复核并导出留痕",
+          "role": "闭环",
+          "do": "选择表格记录查看依据，核对取样或仪器记录，并导出原值、分数与标记。",
+          "effect": "支持复核与追溯，不自动改写化验值。",
+          "trap": "用户CSV没有真实标签时不能计算检出率，本例会明确显示不可计算。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"复核留痕步骤示意\"><title>复核留痕步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M54 158V48M54 158H280M54 158L264 50\" fill=\"none\" stroke=\"#d7dfd1\" stroke-dasharray=\"4 3\"/><circle cx=\"67\" cy=\"148\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"75\" cy=\"152.99297426825683\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"83\" cy=\"132.23197504692072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"91\" cy=\"132.90584501801072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"99\" cy=\"141.49358246623382\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"107\" cy=\"122.05978889110631\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"115\" cy=\"118.03427081999565\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"123\" cy=\"129.20607355694872\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"131\" cy=\"112.32096683334935\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"139\" cy=\"103.59012753228323\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"147\" cy=\"116.12945250727628\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"155\" cy=\"102.81148690709597\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"163\" cy=\"89.74421637993377\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"171\" cy=\"102.32558450479603\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"179\" cy=\"93.3090578830787\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"187\" cy=\"76.61968375907138\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"195\" cy=\"87.91426681241691\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"203\" cy=\"83.59082686120026\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"211\" cy=\"64.28221146556885\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"219\" cy=\"73.06368578709386\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"227\" cy=\"73.45113160479349\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"235\" cy=\"52.73478452084367\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><text x=\"347\" y=\"83\" fill=\"#315d50\" font-size=\"15\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >与独立基准比较</text><text x=\"347\" y=\"111\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >记录误差、误报和失败条件</text><text x=\"347\" y=\"139\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留人工复核入口</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05 / 复核留痕</text></svg>"
+        }
+      ],
+      "metrics": {
+        "title": "如何判断这次计算有没有用？",
+        "html": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 120\" role=\"img\" aria-label=\"案例完整计算流程\"><title>案例完整计算流程</title><rect x=\"8\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"19\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01</text><text x=\"19\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >化验单原始字段</text><path d=\"M122 61h11\" stroke=\"#d75736\"/><path d=\"M128 57L133 61L128 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"136\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"147\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02</text><text x=\"147\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >检查字段与数值</text><path d=\"M250 61h11\" stroke=\"#d75736\"/><path d=\"M256 57L261 61L256 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"264\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"275\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03</text><text x=\"275\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >训练孤立森林</text><path d=\"M378 61h11\" stroke=\"#d75736\"/><path d=\"M384 57L389 61L384 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"392\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"403\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04</text><text x=\"403\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >合</text><path d=\"M506 61h11\" stroke=\"#d75736\"/><path d=\"M512 57L517 61L512 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"520\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"531\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05</text><text x=\"531\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >人工复核</text></svg><p>已知合成标签时计算检出率和标记精确率；同时比较只用规则与当前设置的标记数量。导入CSV后仅展示可计算的审核结果。</p>"
+      },
+      "fails": [
+        {
+          "name": "把少见当错误",
+          "why": "新工况可能产生真实但罕见的数据，需要人工核实。"
+        },
+        {
+          "name": "忽略单位",
+          "why": "单位不一致会使本来正常的数据看起来异常。"
+        },
+        {
+          "name": "没有复核闭环",
+          "why": "只生成红色标记却不保留证据，无法帮助实际审核。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "page",
+      "html": "demo/index.html",
+      "label": "交互演示",
+      "intro": "把范围检查与异常检测结合，筛出需要人工复核的化验记录。",
+      "height": 780
+    }
+  }
+}

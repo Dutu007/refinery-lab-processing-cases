@@ -1,0 +1,173 @@
+{
+  "id": "refining-equipment-maintenance",
+  "sceneId": "r3",
+  "title": "炼化设备预测性维护",
+  "version": "1.0.0",
+  "updated": "2026-10-23",
+  "status": "ready",
+  "methods": [
+    "ts"
+  ],
+  "presentation": {
+    "short": "设备维护预警",
+    "en": "EQUIPMENT CONDITION MONITORING",
+    "algorithm": "多变量高斯异常检测",
+    "difficulty": "中",
+    "summary": "让四类测点一起判断设备退化，比较它与单一振动阈值的报警时间。",
+    "question": "单项还没超限，多个测点是否已经一起偏离正常？",
+    "sources": [
+      [
+        "EmpiricalCovariance · 协方差估计",
+        "https://scikit-learn.org/stable/modules/generated/sklearn.covariance.EmpiricalCovariance.html"
+      ],
+      [
+        "DOE · 运维与预测性维护",
+        "https://www.energy.gov/cmei/femp/articles/operations-and-maintenance-best-practices-guide-achieving-operational-efficiency"
+      ]
+    ],
+    "dataset": "教学合成数据"
+  },
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "机泵的振动、轴承温度和电机电流都会随负荷变化。一个固定阈值只能检查单项是否过大，多变量模型还可以检查测点之间的正常关系是否被破坏。",
+      "judge": [
+        {
+          "label": "业务对象",
+          "value": "旋转设备",
+          "desc": "以机泵轴承缓慢退化为例"
+        },
+        {
+          "label": "可用数据",
+          "value": "正常样本",
+          "desc": "无需先收集大量故障标签"
+        },
+        {
+          "label": "检测方法",
+          "value": "联合偏离",
+          "desc": "均值、协方差与马氏距离"
+        },
+        {
+          "label": "评价要点",
+          "value": "提前量 / 误报",
+          "desc": "两者需要一起看"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "THE PROCESS",
+          "title": "这个工艺在做什么？",
+          "html": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 310\" role=\"img\" aria-label=\"机泵振动与多测点联合退化监测示意图\"><title>机泵振动与多测点联合退化监测示意图</title><rect x=\"10\" y=\"8\" width=\"640\" height=\"294\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M58 219h236l15 12H46Z\" fill=\"#c3d1bb\"/><circle cx=\"119\" cy=\"160\" r=\"46\" fill=\"#e0e9d7\" stroke=\"#315d50\" stroke-width=\"2\"/><circle cx=\"119\" cy=\"160\" r=\"17\" fill=\"#a8bda1\" stroke=\"#315d50\"/><rect x=\"174\" y=\"129\" width=\"112\" height=\"65\" rx=\"6\" fill=\"#d2dfc7\" stroke=\"#315d50\" stroke-width=\"2\"/><path d=\"M186 137v49\" stroke=\"#315d50\" opacity=\".45\"/><path d=\"M201 137v49\" stroke=\"#315d50\" opacity=\".45\"/><path d=\"M216 137v49\" stroke=\"#315d50\" opacity=\".45\"/><path d=\"M231 137v49\" stroke=\"#315d50\" opacity=\".45\"/><path d=\"M246 137v49\" stroke=\"#315d50\" opacity=\".45\"/><path d=\"M261 137v49\" stroke=\"#315d50\" opacity=\".45\"/><path d=\"M139 160h35M119 114V85h68\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"2\"/><circle cx=\"119\" cy=\"114\" r=\"5\" fill=\"#d75736\"/><text x=\"194\" y=\"88\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >振动传感器</text><path d=\"M247 129V107h72\" fill=\"none\" stroke=\"#315d50\" stroke-dasharray=\"3 3\"/><text x=\"323\" y=\"111\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >温度 / 电流</text><path d=\"M352 151H624M352 213H624\" stroke=\"#d7dfd1\"/><path d=\"M362 151 L364.5 156.42647313627296 L367 155.63051597212075 L369.5 149.52483697429219 L372 145.1106984814509 L374.5 147.44970651621395 L377 153.8597664467734 L379.5 156.99058828959696 L382 153.2521200512828 L384.5 146.93118992743499 L387 145.27588450058747 L389.5 150.18431003346623 L392 156.02807125050884 L394.5 156.10624179453626 L397 150.3291850360947 L399.5 145.32133863815073 L402 146.82510183201126 L404.5 153.11613886088517 L407 156.98064096786635 L409.5 153.98725939241302 L412 147.56844606934263 L414.5 145.08452832567448 L417 149.38376591388936 L419.5 155.53630742482522 L422 156.4871541952868 L424.5 151.14598888526322 L427 145.6374209842059 L429.5 146.27801724895875 L432 152.33321850857655 L434.5 156.85964425663767 L437 154.66693087757557 L439.5 148.26941979120147 L442 145.00301146757667 L444.5 148.61323225799237 L447 154.96031279966556 L449.5 156.76618033890497 L452 151.96008199211013 L454.5 146.05307645779686 L457 145.81861111116675 L459.5 151.52554276596103 L462 156.6298448400013 L464.5 155.27851427026204 L467 149.02109531355157 L469.5 145.0328475428736 L472 147.88701644395343 L474.5 154.31078252490124 L477 156.93813922839237 L479.5 152.75634816039562 L482 146.56058710915337 L484.5 145.45541373694184 L487 150.70810867074943 L489.5 156.29550966610913 L492 155.8106536033194 L494.5 149.8095154187124 L497 145.17348255108865 L499.5 147.21860294997913 L502 153.59977717077223 L504.5 156.9998379067066 L507 153.52000220700285 L509.5 147.15052940854022 L512 145.1951690266271 L514.5 148.7921889102544 L517 160.7256934357519 L519.5 161.5069360763166 L522 150.24008122075946 L524.5 139.8446103228968 L527 142.24080594520277 L529.5 154.68099757101766 L532 162.9002614880808 L534.5 157.4737289906287 L537 144.6238984473863 L539.5 139.08541848180857 L542 147.2091554283741 L544.5 159.67977948454552 L547 162.19747066713046 L549.5 151.87524188373746 L552 140.5493904008852 L554.5 141.20704794763984 L557 153.0940915156563 L559.5 162.5798814200764 L562 158.78724844943122 L564.5 146.06513043540116 L567 139.0017305493845 L569.5 145.69651088601114 L572 158.47269815714714 L574.5 162.68008903488575 L577 153.49415093131583 L579.5 141.44821887972233 L582 140.35512687234703 L584.5 151.46830207210706 L587 162.04448447192996 L589.5 159.9561731748555 L592 147.5979937812161 L594.5 139.1408281853775 L597 144.28234228150865 L599.5 157.1268627107985 L602 162.9458298532987 L604.5 155.06674823075116 L607 142.5244061847664 L609.5 139.70086131064573\" fill=\"none\" stroke=\"#315d50\" stroke-width=\"1.4\"/><path d=\"M362 213 L364.5 221.13970970440943 L367 219.94577395818112 L369.5 210.78725546143826 L372 204.16604772217636 L374.5 207.6745597743209 L377 217.2896496701601 L379.5 221.98588243439542 L382 216.37818007692417 L384.5 206.8967848911525 L387 204.41382675088119 L389.5 211.77646505019936 L392 220.54210687576324 L394.5 220.65936269180438 L397 211.9937775541421 L399.5 204.48200795722613 L402 206.7376527480169 L404.5 216.17420829132774 L407 221.97096145179952 L409.5 217.4808890886195 L412 207.85266910401396 L414.5 204.12679248851174 L417 210.57564887083404 L419.5 219.80446113723784 L422 221.23073129293022 L424.5 213.21898332789485 L427 204.95613147630883 L429.5 205.91702587343815 L432 214.99982776286484 L434.5 221.78946638495648 L437 218.50039631636338 L439.5 208.9041296868022 L442 204.00451720136502 L444.5 209.41984838698855 L447 218.94046919949835 L449.5 221.64927050835743 L452 214.4401229881652 L454.5 205.57961468669527 L457 205.22791666675013 L459.5 213.78831414894157 L462 221.44476726000198 L464.5 219.41777140539304 L467 210.03164297032737 L469.5 204.0492713143104 L472 208.33052466593014 L474.5 217.96617378735183 L477 221.90720884258855 L479.5 215.6345222405934 L482 206.34088066373008 L484.5 204.68312060541277 L487 212.56216300612414 L489.5 220.9432644991637 L492 220.2159804049791 L494.5 211.2142731280686 L497 204.260223826633 L499.5 207.32790442496872 L502 216.89966575615833 L504.5 221.99975686005993 L507 216.78000331050424 L509.5 207.22579411281032 L512 204.29275353994066 L514.5 209.68828336538158 L517 227.58854015362783 L519.5 228.7604041144749 L522 211.86012183113917 L524.5 196.26691548434522 L527 199.86120891780413 L529.5 218.52149635652648 L532 230.8503922321212 L534.5 222.71059348594306 L537 203.43584767107944 L539.5 195.12812772271286 L542 207.31373314256112 L544.5 226.0196692268183 L547 229.7962060006957 L549.5 214.3128628256062 L552 197.32408560132777 L554.5 198.31057192145974 L557 216.14113727348445 L559.5 230.36982213011458 L562 224.68087267414683 L564.5 205.59769565310174 L567 195.00259582407674 L569.5 205.04476632901668 L572 224.20904723572067 L574.5 230.52013355232864 L577 216.74122639697373 L579.5 198.6723283195835 L582 197.03269030852053 L584.5 213.7024531081606 L587 229.56672670789496 L589.5 226.4342597622833 L592 207.89699067182417 L594.5 195.21124227806624 L597 202.92351342226297 L599.5 222.19029406619774 L602 230.91874477994807 L604.5 219.1001223461267 L607 200.28660927714958 L609.5 196.0512919659686\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.4\"/><text x=\"362\" y=\"133\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >正常</text><text x=\"362\" y=\"190\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >早期退化</text><text x=\"56\" y=\"266\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >单个测点尚未超限时，多个测点的联合关系可能已经变了。</text></svg><figcaption>概念示意，不作为装置工程图或标准操作条件。</figcaption></figure><p>正常负荷变化也会使振动、温度和电流升高。只按单项阈值报警，既可能错过早期退化，也可能把正常负荷变化当成故障。</p><p>本例模拟一台机泵：第32小时开始加入缓慢磨损。可以调节退化强度与测量噪声，观察联合异常分数如何变化。</p>"
+        },
+        {
+          "no": 2,
+          "en": "THE MODEL",
+          "title": "智能方法具体算哪一步？",
+          "html": "<p>用正常训练样本学习四个特征的均值、标准差与协方差。新测点转换为标准化向量z后，通过马氏距离平方计算它离正常联合分布有多远。</p><p>阈值由独立正常校准样本的分位数得到，并要求连续三小时超限才报警。它是无监督异常检测，不把异常分数当成故障概率。</p><div class=\"equation\"><span>异常分数 = zᵀ Σ⁻¹ z</span><small>Σ描述正常特征之间的联合变化；本例在对角线上加入正则项。</small></div>"
+        },
+        {
+          "no": 3,
+          "en": "THE DATA",
+          "title": "模型需要哪些数据？",
+          "html": "<div class=\"table-wrap\"><table class=\"context-table\"><thead><tr><th>数据</th><th>实际场景需要什么</th><th>本例怎样演示</th></tr></thead><tbody><tr><td>设备测点</td><td>振动RMS、温度、电流、振动峭度等</td><td>四维正常训练样本280组</td></tr><tr><td>正常校准数据</td><td>与训练数据分开的正常运行时段</td><td>140组样本，按分位数计算阈值</td></tr><tr><td>退化演练</td><td>真实应用需检修记录或专家确认</td><td>96小时合成曲线，已知退化起点为32h</td></tr></tbody></table></div>"
+        },
+        {
+          "no": 4,
+          "en": "THE LIMITS",
+          "title": "什么情况下需要重新检查？",
+          "html": "<p><b>难度：中。</b>需要把负荷变化、测点漂移和实际退化区分开。不同设备的正常分布可能不同，应按设备和工况验证。</p><p>本例展示“异常检测 + 预警时间比较”，不宣称能预测真实剩余寿命。观察调高噪声或调低阈值后正常时段的超阈点数，理解误报成本。</p><div class=\"source-links\"><span>专业与算法参考</span><a href=\"https://scikit-learn.org/stable/modules/generated/sklearn.covariance.EmpiricalCovariance.html\" target=\"_blank\" rel=\"noopener noreferrer\">EmpiricalCovariance · 协方差估计 ↗</a><a href=\"https://www.energy.gov/cmei/femp/articles/operations-and-maintenance-best-practices-guide-achieving-operational-efficiency\" target=\"_blank\" rel=\"noopener noreferrer\">DOE · 运维与预测性维护 ↗</a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "从原始数据到可复核的结果",
+      "lead": [
+        "让四类测点一起判断设备退化，比较它与单一振动阈值的报警时间。",
+        "点击步骤查看要做什么、输出什么，以及容易出错的地方。"
+      ],
+      "stats": [
+        [
+          "正常训练",
+          "280组"
+        ],
+        [
+          "独立校准",
+          "140组"
+        ],
+        [
+          "退化演练",
+          "96小时"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "选取正常设备记录",
+          "role": "数据",
+          "do": "收集同一设备在正常负荷范围内的四类测点，移除已知停机与检修状态。",
+          "effect": "让模型学习设备的正常运行关系。",
+          "trap": "训练集中混入早期故障，会把异常也学习成正常。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"正常测点步骤示意\"><title>正常测点步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><text x=\"47\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >时间</text><text x=\"176\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 A</text><text x=\"305\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 B</text><text x=\"434\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >标签 / 状态</text><path d=\"M38 64H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"72\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"72\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 92H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"100\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"100\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 120H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"128\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"128\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 148H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"156\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"156\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01 / 正常测点</text></svg>"
+        },
+        {
+          "name": "统一量纲与时间窗",
+          "role": "预处理",
+          "do": "用训练集统计量标准化测点，并让各特征对应同一时间窗。",
+          "effect": "振动、电流与温度能够一起计算联合偏离。",
+          "trap": "不同采样频率需要先汇总到可比较的时间窗。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"标准化步骤示意\"><title>标准化步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 57v93h190M365 57v93h190M260 107h68\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M323 103L328 107L323 111\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><circle cx=\"58\" cy=\"137\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"386\" cy=\"133\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"64.5\" cy=\"142.3836768414311\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"392\" cy=\"136.86508198777977\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"71\" cy=\"124.58877754222866\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"398\" cy=\"122.7023825328445\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"77.5\" cy=\"126.08526051620966\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"404\" cy=\"123.54409151260752\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"84\" cy=\"134.70422421961044\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"410\" cy=\"129.92550772636366\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"90.5\" cy=\"118.10381000199567\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"416\" cy=\"116.69185222377442\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"97\" cy=\"115.37084373799608\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"422\" cy=\"114.24398957399696\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"103.5\" cy=\"126.31546620125384\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"428\" cy=\"122.4342514898641\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"110\" cy=\"112.0088701500144\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"434\" cy=\"110.98467678334454\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"116.5\" cy=\"105.04111477905491\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"440\" cy=\"105.24308927259827\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"123\" cy=\"117.21650725654865\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"446\" cy=\"114.39061675509339\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"129.5\" cy=\"106.12033821638637\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"452\" cy=\"105.43804083496717\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"136\" cy=\"95.24979474194039\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"458\" cy=\"96.66095146595363\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"142.5\" cy=\"107.46302605431642\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"464\" cy=\"105.83790915335722\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"149\" cy=\"100.23815209477084\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"470\" cy=\"99.89634051815509\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"155.5\" cy=\"86.10771538316425\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"476\" cy=\"88.58377863134997\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"162\" cy=\"97.16284013117522\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"482\" cy=\"96.85998676869184\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"168.5\" cy=\"94.16174417508022\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"488\" cy=\"94.20357880284017\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"175\" cy=\"77.67399031901195\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"494\" cy=\"81.05754802589819\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"181.5\" cy=\"86.46731720838449\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"500\" cy=\"87.5745800509657\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"188\" cy=\"87.70601844431414\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"506\" cy=\"88.21579212335544\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"194.5\" cy=\"69.9513060687593\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"512\" cy=\"74.08434916459056\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"201\" cy=\"75.55931732594873\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"518\" cy=\"78.1239134757379\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"207.5\" cy=\"80.7160951288393\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"524\" cy=\"81.81251843354167\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><text x=\"47\" y=\"179\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >不同量纲 / 时间基准</text><text x=\"367\" y=\"179\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >统一缩放 / 样本对齐</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02 / 标准化</text></svg>"
+        },
+        {
+          "name": "学习正常联合分布",
+          "role": "学习",
+          "do": "计算均值与协方差矩阵，加入小的对角正则项，再计算新样本的马氏距离平方。",
+          "effect": "把多个测点间的正常相关关系纳入检测。",
+          "trap": "多变量高斯假设不适合所有设备分布，真实场景要检查分布与稳健性。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"拟合分布步骤示意\"><title>拟合分布步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><rect x=\"47\" y=\"65\" width=\"125\" height=\"75\" rx=\"3\" fill=\"#dce6d3\"/><text x=\"73\" y=\"107\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >训练样本</text><path d=\"M172 103h73\" stroke=\"#d75736\"/><path d=\"M240 99L245 103L240 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"250\" y=\"56\" width=\"130\" height=\"94\" rx=\"3\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"280\" y=\"98\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >拟合模型</text><text x=\"272\" y=\"122\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >从样本学习参数</text><path d=\"M380 103h60\" stroke=\"#d75736\"/><path d=\"M435 99L440 103L435 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><text x=\"456\" y=\"100\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保存参数</text><text x=\"456\" y=\"120\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留独立测试集</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03 / 拟合分布</text></svg>"
+        },
+        {
+          "name": "校准阈值并连续预警",
+          "role": "检测",
+          "do": "在140组独立正常样本上计算阈值，连续三小时超阈才记为报警。",
+          "effect": "降低单点噪声直接触发预警的概率。",
+          "trap": "更高分位阈值会减少报警，也可能延迟发现退化。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"连续预警步骤示意\"><title>连续预警步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 155H560M45 155V47\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M50 140C120 135 151 126 202 114S280 72 340 78S455 121 552 51\" stroke=\"#315d50\" stroke-width=\"2.5\" fill=\"none\"/><path d=\"M45 92H560\" stroke=\"#d75736\" stroke-width=\"1.4\" stroke-dasharray=\"6 5\"/><circle cx=\"317\" cy=\"79\" r=\"6\" fill=\"#d75736\" stroke=\"white\" stroke-width=\"2\"/><text x=\"399\" y=\"85\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >审核阈值</text><text x=\"47\" y=\"181\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >计算结果需要结合边界条件解释。</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04 / 连续预警</text></svg>"
+        },
+        {
+          "name": "对照单阈值并复核",
+          "role": "评价",
+          "do": "比较联合模型与振动4.5 mm/s教学阈值的首次连续报警时刻，同时统计正常时段超阈点。",
+          "effect": "把提前发现与误报代价放在同一页面查看。",
+          "trap": "更早报警不自动等于更好，应由检修结论判断预警是否有价值。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"人工复核步骤示意\"><title>人工复核步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M54 158V48M54 158H280M54 158L264 50\" fill=\"none\" stroke=\"#d7dfd1\" stroke-dasharray=\"4 3\"/><circle cx=\"67\" cy=\"148\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"75\" cy=\"152.99297426825683\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"83\" cy=\"132.23197504692072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"91\" cy=\"132.90584501801072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"99\" cy=\"141.49358246623382\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"107\" cy=\"122.05978889110631\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"115\" cy=\"118.03427081999565\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"123\" cy=\"129.20607355694872\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"131\" cy=\"112.32096683334935\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"139\" cy=\"103.59012753228323\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"147\" cy=\"116.12945250727628\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"155\" cy=\"102.81148690709597\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"163\" cy=\"89.74421637993377\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"171\" cy=\"102.32558450479603\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"179\" cy=\"93.3090578830787\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"187\" cy=\"76.61968375907138\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"195\" cy=\"87.91426681241691\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"203\" cy=\"83.59082686120026\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"211\" cy=\"64.28221146556885\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"219\" cy=\"73.06368578709386\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"227\" cy=\"73.45113160479349\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"235\" cy=\"52.73478452084367\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><text x=\"347\" y=\"83\" fill=\"#315d50\" font-size=\"15\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >与独立基准比较</text><text x=\"347\" y=\"111\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >记录误差、误报和失败条件</text><text x=\"347\" y=\"139\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留人工复核入口</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05 / 人工复核</text></svg>"
+        }
+      ],
+      "metrics": {
+        "title": "如何判断这次计算有没有用？",
+        "html": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 120\" role=\"img\" aria-label=\"案例完整计算流程\"><title>案例完整计算流程</title><rect x=\"8\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"19\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01</text><text x=\"19\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >正常设备记录</text><path d=\"M122 61h11\" stroke=\"#d75736\"/><path d=\"M128 57L133 61L128 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"136\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"147\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02</text><text x=\"147\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >统一量纲与时间</text><path d=\"M250 61h11\" stroke=\"#d75736\"/><path d=\"M256 57L261 61L256 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"264\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"275\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03</text><text x=\"275\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >学习正常联合分</text><path d=\"M378 61h11\" stroke=\"#d75736\"/><path d=\"M384 57L389 61L384 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"392\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"403\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04</text><text x=\"403\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >校准阈值</text><path d=\"M506 61h11\" stroke=\"#d75736\"/><path d=\"M512 57L517 61L512 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"520\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"531\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05</text><text x=\"531\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >对照单阈值</text></svg><p>比较连续报警首次触发时刻与相对提前量，并统计第0—31小时正常时段的超阈点数。4.5 mm/s仅为教学对照，不声称来自设备标准。</p>"
+      },
+      "fails": [
+        {
+          "name": "训练数据含故障",
+          "why": "模型可能把缓慢退化当成正常工况。"
+        },
+        {
+          "name": "工况变化",
+          "why": "负荷或设备更换会使原有正常分布失效。"
+        },
+        {
+          "name": "只追求提前",
+          "why": "降低阈值虽然更早，也可能导致大量误报。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "page",
+      "html": "demo/index.html",
+      "label": "交互演示",
+      "intro": "让四类测点一起判断设备退化，比较它与单一振动阈值的报警时间。",
+      "height": 780
+    }
+  }
+}

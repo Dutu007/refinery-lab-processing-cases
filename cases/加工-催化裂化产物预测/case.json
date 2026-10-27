@@ -1,0 +1,173 @@
+{
+  "id": "refining-fcc-products",
+  "sceneId": "r2",
+  "title": "催化裂化产物预测",
+  "version": "1.0.0",
+  "updated": "2026-10-23",
+  "status": "ready",
+  "methods": [
+    "opt"
+  ],
+  "presentation": {
+    "short": "裂化产物预测",
+    "en": "FCC PRODUCT PREDICTION",
+    "algorithm": "距离加权 k 近邻回归",
+    "difficulty": "高",
+    "summary": "改变反应条件，观察汽油、液化气等六类产物的质量收率怎样变化。",
+    "question": "提高裂化强度，会多得到哪一种产品？",
+    "sources": [
+      [
+        "EIA · 裂化与转化",
+        "https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil-the-refining-process.php"
+      ],
+      [
+        "KNeighborsRegressor · 近邻回归",
+        "https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html"
+      ]
+    ],
+    "dataset": "教学合成数据"
+  },
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "催化裂化把重质原料中的较大烃分子转成较轻组分。产物不是只有汽油：轻气体、液化气、柴油馏分、油浆和焦炭都需要计入质量分配。",
+      "judge": [
+        {
+          "label": "业务对象",
+          "value": "催化裂化",
+          "desc": "重质原料转化为更轻的组分"
+        },
+        {
+          "label": "模型输入",
+          "value": "4维工况",
+          "desc": "温度、剂油比、密度、催化剂活性"
+        },
+        {
+          "label": "模型输出",
+          "value": "6类产物",
+          "desc": "质量收率合计100%"
+        },
+        {
+          "label": "可观察点",
+          "value": "相似工况",
+          "desc": "近邻如何参与当前预测"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "THE PROCESS",
+          "title": "这个工艺在做什么？",
+          "html": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 310\" role=\"img\" aria-label=\"催化裂化把较大烃分子转化为较小分子的概念图\"><title>催化裂化把较大烃分子转化为较小分子的概念图</title><rect x=\"10\" y=\"8\" width=\"640\" height=\"294\" rx=\"4\" fill=\"#f3f5ed\"/><text x=\"40\" y=\"45\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >较大的烃分子</text><text x=\"430\" y=\"45\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >较小分子 / 不同产物</text><circle cx=\"46\" cy=\"126\" r=\"5\" fill=\"#315d50\"/><path d=\"M46 126L62 138\" stroke=\"#315d50\" stroke-width=\"3\"/><circle cx=\"62\" cy=\"138\" r=\"5\" fill=\"#315d50\"/><path d=\"M62 138L78 126\" stroke=\"#315d50\" stroke-width=\"3\"/><circle cx=\"78\" cy=\"126\" r=\"5\" fill=\"#315d50\"/><path d=\"M78 126L94 138\" stroke=\"#315d50\" stroke-width=\"3\"/><circle cx=\"94\" cy=\"138\" r=\"5\" fill=\"#315d50\"/><path d=\"M94 138L110 126\" stroke=\"#315d50\" stroke-width=\"3\"/><circle cx=\"110\" cy=\"126\" r=\"5\" fill=\"#315d50\"/><path d=\"M110 126L126 138\" stroke=\"#315d50\" stroke-width=\"3\"/><circle cx=\"126\" cy=\"138\" r=\"5\" fill=\"#315d50\"/><path d=\"M126 138L142 126\" stroke=\"#315d50\" stroke-width=\"3\"/><circle cx=\"142\" cy=\"126\" r=\"5\" fill=\"#315d50\"/><path d=\"M142 126L158 138\" stroke=\"#315d50\" stroke-width=\"3\"/><circle cx=\"158\" cy=\"138\" r=\"5\" fill=\"#315d50\"/><path d=\"M158 138L174 126\" stroke=\"#315d50\" stroke-width=\"3\"/><circle cx=\"174\" cy=\"126\" r=\"5\" fill=\"#315d50\"/><path d=\"M227 130h157\" stroke=\"#d75736\" stroke-width=\"2\"/><path d=\"M379 126L384 130L379 134\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"259\" y=\"85\" width=\"96\" height=\"30\" rx=\"3\" fill=\"#f6e6d8\"/><text x=\"275\" y=\"105\" fill=\"#d75736\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >热 + 催化剂</text><text x=\"250\" y=\"157\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >改变分子结构</text><circle cx=\"432\" cy=\"89\" r=\"5\" fill=\"#d75736\"/><path d=\"M432 89L454 98\" stroke=\"#d75736\" stroke-width=\"2.5\"/><circle cx=\"454\" cy=\"98\" r=\"5\" fill=\"#d75736\"/><path d=\"M454 98L476 89\" stroke=\"#d75736\" stroke-width=\"2.5\"/><circle cx=\"476\" cy=\"89\" r=\"5\" fill=\"#d75736\"/><circle cx=\"432\" cy=\"141\" r=\"5\" fill=\"#315d50\"/><path d=\"M432 141L454 150\" stroke=\"#315d50\" stroke-width=\"2.5\"/><circle cx=\"454\" cy=\"150\" r=\"5\" fill=\"#315d50\"/><path d=\"M454 150L476 141\" stroke=\"#315d50\" stroke-width=\"2.5\"/><circle cx=\"476\" cy=\"141\" r=\"5\" fill=\"#315d50\"/><path d=\"M476 141L498 150\" stroke=\"#315d50\" stroke-width=\"2.5\"/><circle cx=\"498\" cy=\"150\" r=\"5\" fill=\"#315d50\"/><path d=\"M498 150L520 141\" stroke=\"#315d50\" stroke-width=\"2.5\"/><circle cx=\"520\" cy=\"141\" r=\"5\" fill=\"#315d50\"/><circle cx=\"432\" cy=\"193\" r=\"5\" fill=\"#d75736\"/><path d=\"M432 193L454 202\" stroke=\"#d75736\" stroke-width=\"2.5\"/><circle cx=\"454\" cy=\"202\" r=\"5\" fill=\"#d75736\"/><text x=\"563\" y=\"100\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >轻气体</text><text x=\"563\" y=\"151\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >汽油组分</text><text x=\"563\" y=\"203\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >其他产物</text><path d=\"M55 221H605\" stroke=\"#d7dfd1\"/><text x=\"55\" y=\"250\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >温度、剂油比、原料性质、催化剂活性 → 一起改变产物分布。</text><text x=\"55\" y=\"276\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >图中分子仅作概念示意，不表示真实反应式或计量关系。</text></svg><figcaption>概念示意，不作为装置工程图或标准操作条件。</figcaption></figure><p>催化裂化在热与催化剂作用下改变烃分子结构。提高温度或增加催化剂循环量，会改变反应深度，但汽油收率不一定一直上升，部分组分可能进一步裂化成轻气体。</p><p>原料密度和催化剂状态也影响产物分布。因此只看一个操作参数，难以判断最终会多得到哪一种产品。</p>"
+        },
+        {
+          "no": 2,
+          "en": "THE MODEL",
+          "title": "智能方法具体算哪一步？",
+          "html": "<p>本例使用距离加权k近邻回归：将四维输入标准化，在训练集中找最接近的k组工况，再按距离的倒数加权其六类产物收率。</p><p>图中会标出本次参与预测的邻居，也允许改变k。它是一种真实的机器学习回归方法，本例没有把它称为深度学习。</p><div class=\"equation\"><span>当前预测 = 相似历史工况的加权平均</span><small>距离越近权重越高；每条训练记录的六类收率都先归一到100%。</small></div>"
+        },
+        {
+          "no": 3,
+          "en": "THE DATA",
+          "title": "模型需要哪些数据？",
+          "html": "<div class=\"table-wrap\"><table class=\"context-table\"><thead><tr><th>数据</th><th>实际场景需要什么</th><th>本例怎样演示</th></tr></thead><tbody><tr><td>原料与操作</td><td>温度、剂油比、原料性质、催化剂状态</td><td>440组四维工况，覆盖页面滑杆范围</td></tr><tr><td>产物标签</td><td>同一物料平衡周期的质量收率</td><td>干气、液化气、汽油、柴油馏分、油浆、焦炭</td></tr><tr><td>验证方式</td><td>按时间或原料批次留出独立数据</td><td>360组训练、80组测试，单独计算每类MAE</td></tr></tbody></table></div>"
+        },
+        {
+          "no": 4,
+          "en": "THE LIMITS",
+          "title": "什么情况下需要重新检查？",
+          "html": "<p><b>难度：高。</b>真实难点是原料、操作与产品的时间对齐，以及催化剂活性和原料组分随时间变化。</p><p>近邻法依赖已有样本。新输入落在稀疏区域时，即使模型给出结果，也可能只是借用了不够相似的工况。二维散点图只是投影，模型的距离使用全部四维特征。</p><div class=\"source-links\"><span>专业与算法参考</span><a href=\"https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil-the-refining-process.php\" target=\"_blank\" rel=\"noopener noreferrer\">EIA · 裂化与转化 ↗</a><a href=\"https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html\" target=\"_blank\" rel=\"noopener noreferrer\">KNeighborsRegressor · 近邻回归 ↗</a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "从原始数据到可复核的结果",
+      "lead": [
+        "改变反应条件，观察汽油、液化气等六类产物的质量收率怎样变化。",
+        "点击步骤查看要做什么、输出什么，以及容易出错的地方。"
+      ],
+      "stats": [
+        [
+          "训练工况",
+          "360组"
+        ],
+        [
+          "独立测试",
+          "80组"
+        ],
+        [
+          "质量分配",
+          "6类产物"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "组织工况与物料平衡",
+          "role": "数据",
+          "do": "把原料、操作条件和同一周期的六类产物质量收率配成一条样本。",
+          "effect": "每组输入都对应一组完整的产物分配。",
+          "trap": "不能混用质量收率与体积收率，也不能漏掉焦炭而强行宣称总量守恒。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"历史工况步骤示意\"><title>历史工况步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><text x=\"47\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >时间</text><text x=\"176\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 A</text><text x=\"305\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >变量 B</text><text x=\"434\" y=\"49\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >标签 / 状态</text><path d=\"M38 64H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"72\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"72\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"72\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 92H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"100\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"100\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"100\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 120H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"128\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"128\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"128\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><path d=\"M38 148H570\" stroke=\"#d7dfd1\"/><rect x=\"47\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"176\" y=\"156\" width=\"47\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"305\" y=\"156\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#315d50\" opacity=\".3\"/><rect x=\"434\" y=\"156\" width=\"34\" height=\"5\" rx=\"2\" fill=\"#d75736\" opacity=\".3\"/><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01 / 历史工况</text></svg>"
+        },
+        {
+          "name": "按训练集缩放特征",
+          "role": "预处理",
+          "do": "用训练集均值和标准差缩放四个输入维度。",
+          "effect": "密度的数值范围不会盖过催化剂活性的数值范围。",
+          "trap": "直接用原始量纲算欧氏距离，会使数值大的维度支配邻居选择。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"特征缩放步骤示意\"><title>特征缩放步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 57v93h190M365 57v93h190M260 107h68\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M323 103L328 107L323 111\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><circle cx=\"58\" cy=\"137\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"386\" cy=\"133\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"64.5\" cy=\"142.3836768414311\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"392\" cy=\"136.86508198777977\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"71\" cy=\"124.58877754222866\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"398\" cy=\"122.7023825328445\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"77.5\" cy=\"126.08526051620966\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"404\" cy=\"123.54409151260752\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"84\" cy=\"134.70422421961044\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"410\" cy=\"129.92550772636366\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"90.5\" cy=\"118.10381000199567\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"416\" cy=\"116.69185222377442\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"97\" cy=\"115.37084373799608\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"422\" cy=\"114.24398957399696\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"103.5\" cy=\"126.31546620125384\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"428\" cy=\"122.4342514898641\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"110\" cy=\"112.0088701500144\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"434\" cy=\"110.98467678334454\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"116.5\" cy=\"105.04111477905491\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"440\" cy=\"105.24308927259827\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"123\" cy=\"117.21650725654865\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"446\" cy=\"114.39061675509339\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"129.5\" cy=\"106.12033821638637\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"452\" cy=\"105.43804083496717\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"136\" cy=\"95.24979474194039\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"458\" cy=\"96.66095146595363\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"142.5\" cy=\"107.46302605431642\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"464\" cy=\"105.83790915335722\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"149\" cy=\"100.23815209477084\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"470\" cy=\"99.89634051815509\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"155.5\" cy=\"86.10771538316425\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"476\" cy=\"88.58377863134997\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"162\" cy=\"97.16284013117522\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"482\" cy=\"96.85998676869184\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"168.5\" cy=\"94.16174417508022\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"488\" cy=\"94.20357880284017\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"175\" cy=\"77.67399031901195\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"494\" cy=\"81.05754802589819\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"181.5\" cy=\"86.46731720838449\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"500\" cy=\"87.5745800509657\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"188\" cy=\"87.70601844431414\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"506\" cy=\"88.21579212335544\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"194.5\" cy=\"69.9513060687593\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"512\" cy=\"74.08434916459056\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"201\" cy=\"75.55931732594873\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"518\" cy=\"78.1239134757379\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"207.5\" cy=\"80.7160951288393\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><circle cx=\"524\" cy=\"81.81251843354167\" r=\"3\" fill=\"#315d50\" opacity=\".55\"/><text x=\"47\" y=\"179\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >不同量纲 / 时间基准</text><text x=\"367\" y=\"179\" fill=\"#315d50\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >统一缩放 / 样本对齐</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02 / 特征缩放</text></svg>"
+        },
+        {
+          "name": "寻找k个相似工况",
+          "role": "学习",
+          "do": "计算新输入与360条训练记录的四维标准化距离，取距离最小的k条。",
+          "effect": "可以在图中追溯本次预测使用了哪些样本。",
+          "trap": "二维图上看起来接近，不代表在全部四维特征上都接近。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"寻找近邻步骤示意\"><title>寻找近邻步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><rect x=\"47\" y=\"65\" width=\"125\" height=\"75\" rx=\"3\" fill=\"#dce6d3\"/><text x=\"73\" y=\"107\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >训练样本</text><path d=\"M172 103h73\" stroke=\"#d75736\"/><path d=\"M240 99L245 103L240 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"250\" y=\"56\" width=\"130\" height=\"94\" rx=\"3\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"280\" y=\"98\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >拟合模型</text><text x=\"272\" y=\"122\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >从样本学习参数</text><path d=\"M380 103h60\" stroke=\"#d75736\"/><path d=\"M435 99L440 103L435 107\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><text x=\"456\" y=\"100\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保存参数</text><text x=\"456\" y=\"120\" fill=\"#7a897e\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留独立测试集</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03 / 寻找近邻</text></svg>"
+        },
+        {
+          "name": "加权预测六类收率",
+          "role": "推理",
+          "do": "用距离倒数作为权重，对邻居的六类收率分别加权平均。",
+          "effect": "输出六类产物，预测收率总和仍为100%。",
+          "trap": "k太小容易受个别样本影响，k过大可能抹平局部变化。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"加权预测步骤示意\"><title>加权预测步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M45 155H560M45 155V47\" stroke=\"#d7dfd1\" fill=\"none\"/><path d=\"M50 140C120 135 151 126 202 114S280 72 340 78S455 121 552 51\" stroke=\"#315d50\" stroke-width=\"2.5\" fill=\"none\"/><path d=\"M45 92H560\" stroke=\"#d75736\" stroke-width=\"1.4\" stroke-dasharray=\"6 5\"/><circle cx=\"317\" cy=\"79\" r=\"6\" fill=\"#d75736\" stroke=\"white\" stroke-width=\"2\"/><text x=\"399\" y=\"85\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >新输入 → 计算结果</text><text x=\"47\" y=\"181\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >计算结果需要结合边界条件解释。</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04 / 加权预测</text></svg>"
+        },
+        {
+          "name": "逐类计算测试误差",
+          "role": "评价",
+          "do": "对80组未参与近邻库的测试工况预测，分别计算六类MAE。",
+          "effect": "同时看到哪个产物更难预测，以及k值改变后的误差。",
+          "trap": "只报告平均误差可能掩盖某一类产物的偏差。",
+          "figure": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 610 210\" role=\"img\" aria-label=\"测试误差步骤示意\"><title>测试误差步骤示意</title><rect x=\"8\" y=\"8\" width=\"594\" height=\"194\" rx=\"4\" fill=\"#f3f5ed\"/><path d=\"M54 158V48M54 158H280M54 158L264 50\" fill=\"none\" stroke=\"#d7dfd1\" stroke-dasharray=\"4 3\"/><circle cx=\"67\" cy=\"148\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"75\" cy=\"152.99297426825683\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"83\" cy=\"132.23197504692072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"91\" cy=\"132.90584501801072\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"99\" cy=\"141.49358246623382\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"107\" cy=\"122.05978889110631\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"115\" cy=\"118.03427081999565\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"123\" cy=\"129.20607355694872\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"131\" cy=\"112.32096683334935\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"139\" cy=\"103.59012753228323\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"147\" cy=\"116.12945250727628\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"155\" cy=\"102.81148690709597\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"163\" cy=\"89.74421637993377\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"171\" cy=\"102.32558450479603\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"179\" cy=\"93.3090578830787\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"187\" cy=\"76.61968375907138\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"195\" cy=\"87.91426681241691\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"203\" cy=\"83.59082686120026\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"211\" cy=\"64.28221146556885\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"219\" cy=\"73.06368578709386\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"227\" cy=\"73.45113160479349\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><circle cx=\"235\" cy=\"52.73478452084367\" r=\"3.5\" fill=\"#315d50\" opacity=\".75\"/><text x=\"347\" y=\"83\" fill=\"#315d50\" font-size=\"15\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >与独立基准比较</text><text x=\"347\" y=\"111\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >记录误差、误报和失败条件</text><text x=\"347\" y=\"139\" fill=\"#d75736\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >保留人工复核入口</text><text x=\"28\" y=\"26\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05 / 测试误差</text></svg>"
+        }
+      ],
+      "metrics": {
+        "title": "如何判断这次计算有没有用？",
+        "html": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 120\" role=\"img\" aria-label=\"案例完整计算流程\"><title>案例完整计算流程</title><rect x=\"8\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"19\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >01</text><text x=\"19\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >工况与物料平衡</text><path d=\"M122 61h11\" stroke=\"#d75736\"/><path d=\"M128 57L133 61L128 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"136\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"147\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >02</text><text x=\"147\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >按训练集缩放特</text><path d=\"M250 61h11\" stroke=\"#d75736\"/><path d=\"M256 57L261 61L256 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"264\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"275\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >03</text><text x=\"275\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >寻找k个相似工</text><path d=\"M378 61h11\" stroke=\"#d75736\"/><path d=\"M384 57L389 61L384 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"392\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"403\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >04</text><text x=\"403\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >加权预测六类收</text><path d=\"M506 61h11\" stroke=\"#d75736\"/><path d=\"M512 57L517 61L512 65\" fill=\"none\" stroke=\"#d75736\" stroke-width=\"1.6\"/><rect x=\"520\" y=\"25\" width=\"113\" height=\"72\" rx=\"3\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"531\" y=\"46\" fill=\"#d75736\" font-size=\"10\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >05</text><text x=\"531\" y=\"72\" fill=\"#315d50\" font-size=\"12\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\" >逐类计算测试误</text></svg><p>使用每类产物MAE、六类平均MAE与质量收率总和评价。MAE单位是百分点，不能把它误写成分类准确率。</p>"
+      },
+      "fails": [
+        {
+          "name": "原料与产品错配",
+          "why": "原料切换有停留时间，直接按整点拼表会出现错误标签。"
+        },
+        {
+          "name": "样本稀疏",
+          "why": "距离很远的“最近邻”仍可能与当前输入不相似。"
+        },
+        {
+          "name": "只看汽油",
+          "why": "忽略轻气体、油浆与焦炭，无法解释完整产物变化。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "page",
+      "html": "demo/index.html",
+      "label": "交互演示",
+      "intro": "改变反应条件，观察汽油、液化气等六类产物的质量收率怎样变化。",
+      "height": 780
+    }
+  }
+}

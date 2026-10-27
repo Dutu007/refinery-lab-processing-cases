@@ -1,0 +1,11 @@
+{
+  "name": "refinery-lab-coursework",
+  "version": "1.0.0",
+  "private": true,
+  "description": "炼化实验室：五个纯前端石油加工智能化案例",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "content": "node tools/create-content.mjs",
+    "check": "node tools/check.mjs"
+  }
+}
