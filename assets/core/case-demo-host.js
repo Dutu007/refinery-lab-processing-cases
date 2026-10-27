@@ -65,6 +65,17 @@
   function isText(n) { return TEXT_EXT.indexOf(extOf(n)) >= 0; }
   function mimeOf(n) { return MIME[extOf(n)] || (isText(n) ? 'text/plain' : 'application/octet-stream'); }
 
+
+  /* 模块示范在主页面执行，禁止越过宿主边界访问网络、持久化或动态代码。 */
+  function moduleSafetyIssues(code) {
+    var rules = [
+      { re: /\\b(?:fetch|WebSocket|XMLHttpRequest|EventSource|sendBeacon)\\b/i, label: '网络请求' },
+      { re: /\\b(?:localStorage|sessionStorage|indexedDB|document\\.cookie)\\b/i, label: '持久化/ Cookie 访问' },
+      { re: /\\b(?:eval|Function|importScripts)\\s*\\(/i, label: '动态代码执行' }
+    ];
+    return rules.filter(function (rule) { return rule.re.test(String(code || '')); }).map(function (rule) { return rule.label; });
+  }
+
   function findFile(files, ref) {
     if (!ref || !files) return null;
     var r = String(ref).replace(/^\.\//, '').split('?')[0].split('#')[0];
@@ -280,6 +291,11 @@
       errBox(box, '没有找到 demo.js', '把示范脚本命名为 demo.js 放进包里，或改用 index.html 整页模式。');
     } else {
       var code = String(jsFile.data);
+      var blocked = moduleSafetyIssues(code);
+      if (blocked.length) {
+        errBox(box, '示范脚本包含不允许的能力', '模块模式不支持网络、浏览器持久化或动态代码执行：' + blocked.join('、') + '。如确需外部资源，请改用整页沙箱并把文件放进案例包。');
+        return { mode: 'module', destroy: function () { try { if (shadow.host === host) host.innerHTML = ''; } catch (e) { } } };
+      }
       var mod = { exports: {} };
       var fn = null;
       try {
