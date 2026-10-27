@@ -94,6 +94,10 @@ for (const p of packages) {
 }
 const dataCtx = { localStorage: { getItem: () => null, setItem() {} }, document: { addEventListener() {} }, addEventListener() {}, btoa: s => Buffer.from(s, 'binary').toString('base64') }; dataCtx.window = dataCtx; vm.createContext(dataCtx);
 for (const file of ['assets/data.js', 'assets/core/registry.js', 'assets/core/kit.js', 'assets/core/case-demo-host.js', 'assets/cases.bundle.js', 'assets/core/case-upload.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), dataCtx, { filename: file });
+const hostSource = fs.readFileSync(path.join(root, 'assets/core/case-demo-host.js'), 'utf8');
+const uploadSource = fs.readFileSync(path.join(root, 'assets/core/case-upload.js'), 'utf8');
+check(hostSource.includes('moduleSafetyIssues') && hostSource.includes('示范脚本包含不允许的能力'), '模块宿主必须在运行时阻断越界能力');
+check(uploadSource.includes('localStorage') && uploadSource.includes('动态代码执行'), '模块导入校验必须提示越界能力');
 check(dataCtx.ATLAS.stages.length === 13, '必须保留全部13环节');
 const importPackage = dataCtx.RefineryPackages.find(p => p.manifest.sceneId === 'r4');
 const importedRecord = { v: 2, pkg: importPackage.manifest, files: importPackage.files, meta: { ...importPackage.manifest, id: 'qa-import-review' } };
