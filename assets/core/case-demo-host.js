@@ -71,7 +71,7 @@
     var rules = [
       { re: /\b(?:fetch|WebSocket|XMLHttpRequest|EventSource|sendBeacon)\b/i, label: '网络请求' },
       { re: /\b(?:localStorage|sessionStorage|indexedDB|document\.cookie)\b/i, label: '持久化/ Cookie 访问' },
-      { re: /\b(?:eval|Function|importScripts)\s*\\(/i, label: '动态代码执行' }
+      { re: /\b(?:eval|Function|importScripts)\s*\(/i, label: '动态代码执行' }
     ];
     return rules.filter(function (rule) { return rule.re.test(String(code || '')); }).map(function (rule) { return rule.label; });
   }
