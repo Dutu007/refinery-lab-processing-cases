@@ -28,9 +28,9 @@ function demoContext() {
 }
 function finiteTree(a) { return Array.isArray(a) ? a.every(finiteTree) : typeof a === 'number' ? Number.isFinite(a) : true; }
 const packages = fs.readdirSync(path.join(root, 'cases')).filter(folder => fs.existsSync(path.join(root, 'cases', folder, 'case.json'))).map(folder => ({ folder, dir: path.join(root, 'cases', folder), manifest: JSON.parse(fs.readFileSync(path.join(root, 'cases', folder, 'case.json'), 'utf8')) }));
-check(packages.length === 5, '加工类别的五个场景必须各有一个包');
-check(new Set(packages.map(p => p.manifest.id)).size === 5, '案例id必须唯一');
-check(packages.map(p => p.manifest.sceneId).sort().join(',') === 'r1,r2,r3,r4,r5', '场景编号必须保持原项目约定');
+check(packages.length >= 8, '项目应至少包含8个可运行案例');
+check(new Set(packages.map(p => p.manifest.id)).size === packages.length, '案例id必须唯一');
+check(['r1','r2','r3','r4','r5'].every(id => packages.some(p => p.manifest.sceneId === id)), '原有五个加工场景必须保留');
 for (const p of packages) {
   for (const file of ['case.json', 'README.txt', 'demo/index.html', 'demo/demo.js', 'demo/engine.js', 'demo/demo.css']) check(fs.existsSync(path.join(p.dir, file)), `${p.folder}缺少${file}`);
   const bytes = fs.readdirSync(path.join(p.dir, 'demo')).reduce((s, f) => s + fs.statSync(path.join(p.dir, 'demo', f)).size, fs.statSync(path.join(p.dir, 'case.json')).size);

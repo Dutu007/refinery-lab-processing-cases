@@ -8,7 +8,7 @@
   const defaults = { delay: 4, noise: .5, time: 64 }; let timer = null, latest;
   document.getElementById('app').innerHTML = `
     <header class="lab-head"><div><div class="lab-no">05 / ONLINE QUALITY ESTIMATION</div><h1>化验结果还没回来，现在的汽油质量是多少？</h1><p>用温度、压力等过程变量估计重整汽油辛烷值，比较模型与滞后化验值的差别。</p></div><span class="synthetic">教学合成数据</span></header>
-    <div class="lab-layout"><aside class="controls"><h2>采样与测量 <span>STREAM</span></h2>
+    <div class="visual-key" role="note" aria-label="图表阅读提示"><span class="visual-key-title">如何读这页</span><span><i class="vk-dot vk-input"></i>输入 / 工况</span><span><i class="vk-dot vk-model"></i>模型计算</span><span><i class="vk-dot vk-result"></i>结果 / 约束</span></div><div class="lab-layout"><aside class="controls"><h2>采样与测量 <span>STREAM</span></h2>
     ${L.control('delay', '化验结果延迟', 0, 12, 1, 4, ' h', '每8小时取样一次，延迟后才能看到该次结果。')}
     ${L.control('noise', '过程传感器噪声', 0, 2, .1, .5, ' ×', '训练模型不变，增加现场输入的不确定性。')}
     ${L.control('time', '当前运行时刻', 0, 95, 1, 64, ' h', '图表只展示当前时刻已经可见的数据。')}

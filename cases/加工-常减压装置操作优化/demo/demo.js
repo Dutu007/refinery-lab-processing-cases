@@ -13,7 +13,7 @@
   const predict = x => models.map(m => m.predict(x)), score = y => y[0] - 11 * y[1], feasible = y => y[2] >= 55 && y[1] <= 1.85;
   document.getElementById('app').innerHTML = `
     <header class="lab-head"><div><div class="lab-no">01 / CDU · VDU</div><h1>收率、能耗和闪点，怎样一起考虑？</h1><p>调整操作条件，查看代理模型的预测，再在约束范围内寻找更好的参数。</p></div><span class="synthetic">教学合成数据</span></header>
-    <div class="lab-layout"><aside class="controls"><h2>操作参数 <span>INPUT</span></h2>
+    <div class="visual-key" role="note" aria-label="图表阅读提示"><span class="visual-key-title">如何读这页</span><span><i class="vk-dot vk-input"></i>输入 / 工况</span><span><i class="vk-dot vk-model"></i>模型计算</span><span><i class="vk-dot vk-result"></i>结果 / 约束</span></div><div class="lab-layout"><aside class="controls"><h2>操作参数 <span>INPUT</span></h2>
     ${L.control('temperature', '加热炉出口温度', 340, 390, 1, 365, ' °C', '升温有利于汽化，也会增加能耗。')}
     ${L.control('reflux', '回流比', 1.4, 4, .1, 2.7, '', '回流改善分离，需要更多加热和冷却。')}
     ${L.control('vacuum', '减压塔绝对压力', 8, 28, 1, 18, ' kPa', '压力越低，重馏分越容易在较低温度下汽化。')}

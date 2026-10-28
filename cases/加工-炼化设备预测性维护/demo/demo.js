@@ -7,7 +7,7 @@
   const defaults = { wear: 1.2, noise: 1, quantile: 99, time: 72 };
   document.getElementById('app').innerHTML = `
     <header class="lab-head"><div><div class="lab-no">03 / ROTATING EQUIPMENT</div><h1>振动还没超限，设备是否已经偏离正常？</h1><p>用正常运行样本学习多个测点的关系，比较联合异常预警与单一振动阈值。</p></div><span class="synthetic">教学合成数据</span></header>
-    <div class="lab-layout"><aside class="controls"><h2>退化场景 <span>SCENARIO</span></h2>
+    <div class="visual-key" role="note" aria-label="图表阅读提示"><span class="visual-key-title">如何读这页</span><span><i class="vk-dot vk-input"></i>输入 / 工况</span><span><i class="vk-dot vk-model"></i>模型计算</span><span><i class="vk-dot vk-result"></i>结果 / 约束</span></div><div class="lab-layout"><aside class="controls"><h2>退化场景 <span>SCENARIO</span></h2>
     ${L.control('wear', '退化强度', .2, 1.8, .1, 1.2, '', '第32小时起逐渐增加，模拟轴承磨损。')}
     ${L.control('noise', '测量噪声倍率', .5, 2, .1, 1, ' ×', '增加噪声，观察模型误报是否变多。')}
     ${L.control('quantile', '正常样本阈值分位数', 95, 99.9, .1, 99, '%', '阈值从140组独立正常校准样本计算。')}

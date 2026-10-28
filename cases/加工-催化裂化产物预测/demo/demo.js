@@ -13,7 +13,7 @@
   const model = L.knn(train.map(d => d.x), train.map(d => d.y));
   document.getElementById('app').innerHTML = `
     <header class="lab-head"><div><div class="lab-no">02 / FLUID CATALYTIC CRACKING</div><h1>换一种工况，会多产汽油还是液化气？</h1><p>模型从历史工况中找相近样本，再按距离加权预测六类产物的质量收率。</p></div><span class="synthetic">教学合成数据</span></header>
-    <div class="lab-layout"><aside class="controls"><h2>原料与反应条件 <span>INPUT</span></h2>
+    <div class="visual-key" role="note" aria-label="图表阅读提示"><span class="visual-key-title">如何读这页</span><span><i class="vk-dot vk-input"></i>输入 / 工况</span><span><i class="vk-dot vk-model"></i>模型计算</span><span><i class="vk-dot vk-result"></i>结果 / 约束</span></div><div class="lab-layout"><aside class="controls"><h2>原料与反应条件 <span>INPUT</span></h2>
     ${L.control('temperature', '反应温度', 480, 550, 1, 515, ' °C')}
     ${L.control('ratio', '剂油比', 4, 10, .1, 7, '', '催化剂循环量与原料油流量之比。')}
     ${L.control('density', '原料密度', 900, 970, 1, 935, ' kg/m³')}

@@ -1,0 +1,169 @@
+{
+  "id": "pipeline-leak-detection",
+  "sceneId": "t1",
+  "title": "管道泄漏智能检测",
+  "version": "1.0.0",
+  "updated": "2026-10-28",
+  "status": "ready",
+  "methods": [
+    "ts"
+  ],
+  "presentation": {
+    "short": "管道泄漏智能检测",
+    "en": "管道泄漏智能检测",
+    "algorithm": "时序异常检测 · 压力波传播分析",
+    "difficulty": "中",
+    "summary": "监测压力、流量和阀门状态，定位疑似泄漏区段并比较误报风险。",
+    "question": "如何在多个指标和约束之间做出可解释选择？",
+    "sources": [
+      [
+        "OnePetro · 石油工程文献",
+        "https://www.onepetro.org/"
+      ]
+    ],
+    "dataset": "教学合成数据"
+  },
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "lede": "监测压力、流量和阀门状态，定位疑似泄漏区段并比较误报风险。",
+      "judge": [
+        {
+          "label": "业务对象",
+          "value": "管道泄漏智能检测",
+          "desc": "真实业务流程中的可解释决策点"
+        },
+        {
+          "label": "模型输入",
+          "value": "3 个变量",
+          "desc": "时间或井组对齐的数据"
+        },
+        {
+          "label": "计算结果",
+          "value": "3 个指标",
+          "desc": "预测、约束与风险"
+        },
+        {
+          "label": "演示方式",
+          "value": "拖动 / 比较",
+          "desc": "观察方案变化"
+        }
+      ],
+      "sections": [
+        {
+          "no": 1,
+          "en": "THE PROCESS",
+          "title": "这个专业场景在做什么？",
+          "html": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 250\" role=\"img\" aria-label=\"管道泄漏智能检测示意图\"><title>管道泄漏智能检测示意图</title><rect x=\"10\" y=\"10\" width=\"640\" height=\"230\" rx=\"8\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"34\" y=\"42\" fill=\"#315d50\" font-size=\"16\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">管道泄漏智能检测</text><rect x=\"40\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"55\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">压力残差</text><text x=\"55\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"230\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"245\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">流量平衡</text><text x=\"245\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"420\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"435\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">阀门状态</text><text x=\"435\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><path d=\"M185 121h38M375 121h38\" stroke=\"#d75736\" stroke-width=\"2\"/><text x=\"35\" y=\"205\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">教学合成数据；结果用于解释方法，不作为现场操作标准。</text></svg><figcaption>主题流程示意，不是工程设计图。</figcaption></figure><p>油气长输管道需要连续监测压力波和流量平衡，异常峰值出现后要结合传播方向判断是否值得派检。</p><p>监测压力、流量和阀门状态，定位疑似泄漏区段并比较误报风险。</p>"
+        },
+        {
+          "no": 2,
+          "en": "THE MODEL",
+          "title": "智能方法介入哪一步？",
+          "html": "<p>先把 压力残差、流量平衡、阀门状态 按时间窗口对齐，再用时序异常检测 · 压力波传播分析计算候选结果。页面把每一步的输入、输出和约束同时展示，便于复核。</p><div class=\"equation\"><span>推荐值 = 预测收益 − 约束惩罚</span><small>权重变化会改变推荐方案，不能把单一指标当作最终结论。</small></div>"
+        },
+        {
+          "no": 3,
+          "en": "THE DATA",
+          "title": "模型需要哪些数据？",
+          "html": "<div class=\"table-wrap\"><table class=\"context-table\"><thead><tr><th>数据</th><th>业务含义</th><th>本例演示</th></tr></thead><tbody><tr><td>压力残差</td><td>按时间或井组对齐的观测量</td><td>合成样本 + 交互筛选</td></tr><tr><td>流量平衡</td><td>按时间或井组对齐的观测量</td><td>合成样本 + 交互筛选</td></tr><tr><td>阀门状态</td><td>按时间或井组对齐的观测量</td><td>合成样本 + 交互筛选</td></tr></tbody></table></div>"
+        },
+        {
+          "no": 4,
+          "en": "THE LIMITS",
+          "title": "什么时候必须人工复核？",
+          "html": "<p><b>边界：</b>检测目标不是把每一次压力波动都当成泄漏，而是让异常分数、传播一致性和人工复核形成闭环。</p><p>当输入超出训练范围、传感器缺失或约束不满足时，页面只提示风险，不自动给出现场指令。</p><div class=\"source-links\"><span>参考方向</span><a href=\"https://www.onepetro.org/\" target=\"_blank\" rel=\"noopener noreferrer\">OnePetro · 石油工程文献 ↗</a></div>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "从现场数据到可复核方案",
+      "lead": [
+        "监测压力、流量和阀门状态，定位疑似泄漏区段并比较误报风险。",
+        "点击步骤查看输入、输出与容易出错的地方。"
+      ],
+      "stats": [
+        [
+          "输入变量",
+          "3项"
+        ],
+        [
+          "候选方案",
+          "动态计算"
+        ],
+        [
+          "人工复核",
+          "保留入口"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "整理现场数据",
+          "role": "数据",
+          "do": "对齐 压力残差、流量平衡、阀门状态 与时间窗口。",
+          "effect": "得到可比较的样本行。",
+          "trap": "时间戳错位会制造伪相关。",
+          "figure": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 250\" role=\"img\" aria-label=\"整理现场数据示意图\"><title>整理现场数据示意图</title><rect x=\"10\" y=\"10\" width=\"640\" height=\"230\" rx=\"8\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"34\" y=\"42\" fill=\"#315d50\" font-size=\"16\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">整理现场数据</text><rect x=\"40\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"55\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入</text><text x=\"55\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"230\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"245\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">模型</text><text x=\"245\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"420\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"435\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">复核</text><text x=\"435\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><path d=\"M185 121h38M375 121h38\" stroke=\"#d75736\" stroke-width=\"2\"/><text x=\"35\" y=\"205\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">教学合成数据；结果用于解释方法，不作为现场操作标准。</text></svg><figcaption>主题流程示意，不是工程设计图。</figcaption></figure>"
+        },
+        {
+          "name": "检查范围与缺失",
+          "role": "质检",
+          "do": "标出缺失、突变和超范围输入。",
+          "effect": "把不确定性显式呈现。",
+          "trap": "不能用静默填零掩盖坏数据。",
+          "figure": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 250\" role=\"img\" aria-label=\"检查范围与缺失示意图\"><title>检查范围与缺失示意图</title><rect x=\"10\" y=\"10\" width=\"640\" height=\"230\" rx=\"8\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"34\" y=\"42\" fill=\"#315d50\" font-size=\"16\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">检查范围与缺失</text><rect x=\"40\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"55\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入</text><text x=\"55\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"230\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"245\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">模型</text><text x=\"245\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"420\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"435\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">复核</text><text x=\"435\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><path d=\"M185 121h38M375 121h38\" stroke=\"#d75736\" stroke-width=\"2\"/><text x=\"35\" y=\"205\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">教学合成数据；结果用于解释方法，不作为现场操作标准。</text></svg><figcaption>主题流程示意，不是工程设计图。</figcaption></figure>"
+        },
+        {
+          "name": "计算代理模型",
+          "role": "学习",
+          "do": "用时序异常检测 · 压力波传播分析输出异常分数和相关指标。",
+          "effect": "得到可解释的预测结果。",
+          "trap": "统计模型不是完整机理模型。",
+          "figure": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 250\" role=\"img\" aria-label=\"计算代理模型示意图\"><title>计算代理模型示意图</title><rect x=\"10\" y=\"10\" width=\"640\" height=\"230\" rx=\"8\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"34\" y=\"42\" fill=\"#315d50\" font-size=\"16\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">计算代理模型</text><rect x=\"40\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"55\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入</text><text x=\"55\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"230\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"245\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">模型</text><text x=\"245\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"420\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"435\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">复核</text><text x=\"435\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><path d=\"M185 121h38M375 121h38\" stroke=\"#d75736\" stroke-width=\"2\"/><text x=\"35\" y=\"205\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">教学合成数据；结果用于解释方法，不作为现场操作标准。</text></svg><figcaption>主题流程示意，不是工程设计图。</figcaption></figure>"
+        },
+        {
+          "name": "施加业务约束",
+          "role": "优化",
+          "do": "过滤压力、成本或安全边界之外的方案。",
+          "effect": "保留可以复核的候选。",
+          "trap": "最优值不等于可执行值。",
+          "figure": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 250\" role=\"img\" aria-label=\"施加业务约束示意图\"><title>施加业务约束示意图</title><rect x=\"10\" y=\"10\" width=\"640\" height=\"230\" rx=\"8\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"34\" y=\"42\" fill=\"#315d50\" font-size=\"16\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">施加业务约束</text><rect x=\"40\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"55\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入</text><text x=\"55\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"230\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"245\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">模型</text><text x=\"245\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"420\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"435\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">复核</text><text x=\"435\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><path d=\"M185 121h38M375 121h38\" stroke=\"#d75736\" stroke-width=\"2\"/><text x=\"35\" y=\"205\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">教学合成数据；结果用于解释方法，不作为现场操作标准。</text></svg><figcaption>主题流程示意，不是工程设计图。</figcaption></figure>"
+        },
+        {
+          "name": "比较方案并复核",
+          "role": "评价",
+          "do": "把推荐、基准和风险提示放在同一视图。",
+          "effect": "支持人工决定下一步。",
+          "trap": "没有独立验证时不要宣称上线效果。",
+          "figure": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 250\" role=\"img\" aria-label=\"比较方案并复核示意图\"><title>比较方案并复核示意图</title><rect x=\"10\" y=\"10\" width=\"640\" height=\"230\" rx=\"8\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"34\" y=\"42\" fill=\"#315d50\" font-size=\"16\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">比较方案并复核</text><rect x=\"40\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"55\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入</text><text x=\"55\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"230\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"245\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">模型</text><text x=\"245\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"420\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"435\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">复核</text><text x=\"435\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><path d=\"M185 121h38M375 121h38\" stroke=\"#d75736\" stroke-width=\"2\"/><text x=\"35\" y=\"205\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">教学合成数据；结果用于解释方法，不作为现场操作标准。</text></svg><figcaption>主题流程示意，不是工程设计图。</figcaption></figure>"
+        }
+      ],
+      "metrics": {
+        "title": "如何判断计算有没有用？",
+        "html": "<figure class=\"concept-figure\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 660 250\" role=\"img\" aria-label=\"完整计算流程示意图\"><title>完整计算流程示意图</title><rect x=\"10\" y=\"10\" width=\"640\" height=\"230\" rx=\"8\" fill=\"#f3f5ed\" stroke=\"#d7dfd1\"/><text x=\"34\" y=\"42\" fill=\"#315d50\" font-size=\"16\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">完整计算流程</text><rect x=\"40\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"55\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">数据</text><text x=\"55\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"230\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"245\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">模型</text><text x=\"245\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><rect x=\"420\" y=\"85\" width=\"145\" height=\"72\" rx=\"8\" fill=\"#fffef8\" stroke=\"#315d50\"/><text x=\"435\" y=\"117\" fill=\"#315d50\" font-size=\"13\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">约束</text><text x=\"435\" y=\"140\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">输入 → 计算 → 复核</text><path d=\"M185 121h38M375 121h38\" stroke=\"#d75736\" stroke-width=\"2\"/><text x=\"35\" y=\"205\" fill=\"#7a897e\" font-size=\"11\" font-family=\"Segoe UI,Microsoft YaHei,sans-serif\">教学合成数据；结果用于解释方法，不作为现场操作标准。</text></svg><figcaption>主题流程示意，不是工程设计图。</figcaption></figure><p>同时观察预测变化、约束状态和基准对比，不只看一个漂亮的数字。</p>"
+      },
+      "fails": [
+        {
+          "name": "数据未对齐",
+          "why": "时间或井组对应关系错误会让模型学到伪相关。"
+        },
+        {
+          "name": "忽略约束",
+          "why": "收益更高的候选可能不可执行。"
+        },
+        {
+          "name": "超出边界",
+          "why": "分布变化时需要重新验证。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "page",
+      "html": "demo/index.html",
+      "label": "交互演示",
+      "intro": "监测压力、流量和阀门状态，定位疑似泄漏区段并比较误报风险。",
+      "height": 680
+    }
+  }
+}

@@ -8,7 +8,7 @@
   let rows = [], selected = 0, imported = false, latest;
   document.getElementById('app').innerHTML = `
     <header class="lab-head"><div><div class="lab-no">04 / LABORATORY DATA REVIEW</div><h1>数值都在范围内，也可能需要复核。</h1><p>比较范围规则与孤立森林的判断，逐条查看为什么被标记。</p></div><span class="synthetic" id="source-tag">教学合成数据</span></header>
-    <div class="lab-layout"><aside class="controls"><h2>审核设置 <span>REVIEW</span></h2>
+    <div class="visual-key" role="note" aria-label="图表阅读提示"><span class="visual-key-title">如何读这页</span><span><i class="vk-dot vk-input"></i>输入 / 工况</span><span><i class="vk-dot vk-model"></i>模型计算</span><span><i class="vk-dot vk-result"></i>结果 / 约束</span></div><div class="lab-layout"><aside class="controls"><h2>审核设置 <span>REVIEW</span></h2>
     ${L.control('faults', '注入的异常样本数', 0, 10, 1, 5, ' / 30', '混合录入错误与单项未超限的组合异常。')}
     ${L.control('threshold', '模型异常分数阈值', .42, .75, .01, defaults.threshold, '', `100组正常校准样本的97%分位为${normalThreshold.toFixed(3)}，滑杆默认取两位小数。`)}
     <label class="check"><input type="checkbox" id="rules" checked>同时使用范围规则</label>
